@@ -173,10 +173,8 @@ public:
 
     Vector vectorSourceAtVertex(const Vertex aV){
         FATAL_ERROR_MSG(myIsInit, "init() method must be called first");
-        Vector S(2);
-        S(0) = myVectorSource(2*aV);
-        S(1) = myVectorSource(2*aV+1);
-        return S;
+        DenseMatrix Tv = myCalculus->Tv(aV);
+        return Tv.col(0)*myVectorSource(2*aV) + Tv.col(1)*myVectorSource(2*aV+1);
     }
 
 

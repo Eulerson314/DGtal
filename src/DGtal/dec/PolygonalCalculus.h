@@ -104,9 +104,7 @@ public:
         mySurfaceMesh(&surf),  myGlobalCacheEnabled(globalInternalCacheEnabled)
     {
         myEmbedder =[&](Face f,Vertex v){ return mySurfaceMesh->position(v);};
-        mySurfaceMesh->computeFaceNormalsFromPositions();
-        mySurfaceMesh->computeVertexNormalsFromFaceNormals();
-        myVertexNormalEmbedder =[&](Vertex v){ return mySurfaceMesh->vertexNormal(v);};
+        myVertexNormalEmbedder =[&](Vertex v){ return computeVertexNormal(v);};
         init();
     };
 
@@ -121,9 +119,7 @@ public:
               bool globalInternalCacheEnabled = false):
         mySurfaceMesh(&surf), myEmbedder(embedder), myGlobalCacheEnabled(globalInternalCacheEnabled)
     {
-        mySurfaceMesh->computeFaceNormalsFromPositions();
-        mySurfaceMesh->computeVertexNormalsFromFaceNormals();
-        myVertexNormalEmbedder =[&](Vertex v){ return mySurfaceMesh->vertexNormal(v);};
+        myVertexNormalEmbedder =[&](Vertex v){ return computeVertexNormal(v);};
         init();
     };
 
@@ -518,6 +514,13 @@ public:
 
     static Eigen::Vector3d toVec3(const Real3dPoint& x){
         return Eigen::Vector3d(x(0),x(1),x(2));
+    }
+
+    Vector computeVertexNormal(const Vertex &v) const {
+        Vector n(3);
+        for (auto f : mySurfaceMesh->incidentFaces(v))
+            n += vectorArea(f);
+        return n.normalized();
     }
 
     Eigen::Vector3d n_v(const Vertex &v) const {
