@@ -481,7 +481,7 @@ public:
         return Eigen::Vector3d(x(0),x(1),x(2));
     }
 
-    Eigen::Vector3d n_v(const Vertex &v) {
+    Eigen::Vector3d n_v(const Vertex &v) const {
         Eigen::Vector3d n(0.0, 0.0, 0.0);
         size_t cpt = 0u;
         for (auto f : getSurfaceMeshPtr()->incidentFaces(v))
@@ -490,7 +490,7 @@ public:
     }
 
     // 3x2 matrix defining the tangent space at v
-    DenseMatrix Tv(const Vertex &v) {
+    DenseMatrix Tv(const Vertex &v) const {
         Eigen::Vector3d nv = n_v(v);
         assert(std::abs(nv.norm() - 1.0) < 0.001);
         const auto& N = getSurfaceMeshPtr()->neighborVertices(v);
@@ -508,7 +508,7 @@ public:
     }
 
     // 3x2 matrix defining the tangent space at v
-    DenseMatrix Tf(const Face &f) {
+    DenseMatrix Tf(const Face &f) const {
         Eigen::Vector3d nf = faceNormal(f);
         assert(std::abs(nf.norm() - 1.0) < 0.001);
         const auto& N = getSurfaceMeshPtr()->incidentVertices(f);
@@ -528,7 +528,7 @@ public:
 
     // Rotation matrix to align n_v to n_f
     // https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
-    DenseMatrix Qvf(const Vertex &v, const Face &f) {
+    DenseMatrix Qvf(const Vertex &v, const Face &f) const {
         Eigen::Vector3d nf = faceNormal(f);
         Eigen::Vector3d nv = n_v(v);
         double c = nv.dot(nf);
@@ -539,13 +539,13 @@ public:
     }
 
     // Levi-Citiva connection from vertex v to face f
-    DenseMatrix Rvf(const Vertex &v, const Face &f) {
+    DenseMatrix Rvf(const Vertex &v, const Face &f) const {
         return Tf(f).transpose() * Qvf(v, f) * Tv(v);
     }
 
     // returns Block Diagonal matrix with Rvf for each vertex v in face f
     // to the face f
-    DenseMatrix BlockConnection(const Face &f) {
+    DenseMatrix BlockConnection(const Face &f) const {
         auto nf = degree(f);
         DenseMatrix RU_fO = DenseMatrix::Zero(nf * 2, nf * 2);
         size_t cpt = 0;
@@ -558,7 +558,7 @@ public:
     }
 
     //performs the tensor-kronecker product of M with Id2
-    DenseMatrix KroneckerWithI2(const DenseMatrix& M){
+    DenseMatrix KroneckerWithI2(const DenseMatrix& M) const{
         size_t h = M.rows(); size_t w = M.cols();
         DenseMatrix MK = DenseMatrix::Zero(h*2,w*2);
         for (size_t j = 0;j<h;j++)
@@ -574,7 +574,7 @@ public:
     // isomorphic vector form (a b c d)^t
     // to be used in the dirichlet energy
     // G∇_f
-    DenseMatrix EnergyCovG_f(const Face &f) {
+    DenseMatrix EnergyCovG_f(const Face &f) const {
         return KroneckerWithI2(Tf(f).transpose()*gradient(f))*BlockConnection(f);
     }
 
@@ -583,13 +583,13 @@ public:
     // isomorphic vector form (a b c d ... )^t
     // to be used in the dirichlet energy
     // P∇_f
-    DenseMatrix EnergyCovP_f(const Face &f) {
+    DenseMatrix EnergyCovP_f(const Face &f) const {
         return KroneckerWithI2(P(f)*D(f))*BlockConnection(f);;
     }
 
     // Connection Laplacian
     // L∇ := (afG∇tG∇+λP∇tP∇)
-    DenseMatrix CovL(const Face &f, double lambda = 1.0) {
+    DenseMatrix CovL(const Face &f, double lambda = 1.0) const {
         auto G = EnergyCovG_f(f);
         auto P = EnergyCovP_f(f);
         return faceArea(f) * G.transpose() * G + lambda * P.transpose() * P;
@@ -659,7 +659,7 @@ public:
         return M;
     }
 
-    SparseMatrix globalConnectionLaplace(const double lambda=1.0)
+    SparseMatrix globalConnectionLaplace(const double lambda=1.0) const
     {
         auto nv = mySurfaceMesh->nbVertices();
         SparseMatrix lapGlobal(2*nv, 2*nv);
