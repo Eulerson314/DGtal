@@ -155,7 +155,7 @@ public:
     void addSource(const Vertex aV,const Vector& ev)
     {
         ASSERT_MSG(aV < myCalculus->nbVertices(), "Vertex is not in the surface mesh vertex range");
-        Vector v = myCalculus->flat(aV)*myCalculus->sharp(aV)*ev;
+        Vector v = myCalculus->Tv(aV).transpose()*ev;
         v = v.normalized()*ev.norm();
         myVectorSource( 2*aV ) = v(0);
         myVectorSource( 2*aV+1 ) = v(1);
