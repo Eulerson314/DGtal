@@ -172,10 +172,18 @@ public:
         return myVectorSource;
     }
 
-    Vector vectorSourceAtVertex(const Vertex aV){
+    Vector extrinsicVectorSourceAtVertex(const Vertex aV){
         FATAL_ERROR_MSG(myIsInit, "init() method must be called first");
         DenseMatrix Tv = myCalculus->Tv(aV);
         return Tv.col(0)*myVectorSource(2*aV) + Tv.col(1)*myVectorSource(2*aV+1);
+    }
+
+    Vector intrinsicVectorSourceAtVertex(const Vertex aV){
+        FATAL_ERROR_MSG(myIsInit, "init() method must be called first");
+        Vector s(2);
+        s(0) = myVectorSource(2*aV);
+        s(1) = myVectorSource(2*aV+2);
+        return s;
     }
 
 
