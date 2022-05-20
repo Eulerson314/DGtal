@@ -104,7 +104,9 @@ public:
         mySurfaceMesh(&surf),  myGlobalCacheEnabled(globalInternalCacheEnabled)
     {
         myEmbedder =[&](Face f,Vertex v){ return mySurfaceMesh->position(v);};
-        myVertexNormalEmbedder =[&](Vertex v){ return computeVertexNormal(v);};
+        myVertexNormalEmbedder =[&](Vertex v){
+            Vector X = computeVertexNormal(v);
+            return Real3dVector(X(0),X(1),X(2));};
         init();
     };
 
@@ -119,7 +121,9 @@ public:
               bool globalInternalCacheEnabled = false):
         mySurfaceMesh(&surf), myEmbedder(embedder), myGlobalCacheEnabled(globalInternalCacheEnabled)
     {
-        myVertexNormalEmbedder =[&](Vertex v){ return computeVertexNormal(v);};
+        myVertexNormalEmbedder =[&](Vertex v){
+            Vector X = computeVertexNormal(v);
+            return Real3dVector(X(0),X(1),X(2));};
         init();
     };
 
@@ -946,7 +950,7 @@ private:
     std::function<Real3dPoint(Face, Vertex)> myEmbedder;
 
     ///Embedding function (vertex)->R^3 for the vertex normal.
-    std::function<Real3dPoint(Vertex)> myVertexNormalEmbedder;
+    std::function<Real3dVector(Vertex)> myVertexNormalEmbedder;
 
     ///Cache containing the face degree
     std::vector<size_t> myFaceDegree;
