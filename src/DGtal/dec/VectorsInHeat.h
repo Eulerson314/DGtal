@@ -149,12 +149,13 @@ public:
         myDiracSource		= Vector::Zero(myCalculus->nbVertices());
     }
 
-    /** Adds a source point at a vertex @e aV
+    /** Adds a source vector (3D extrinsic) at a vertex @e aV
     * @param aV the Vertex
      **/
-    void addSource(const Vertex aV,const Vector& v)
+    void addSource(const Vertex aV,const Vector& ev)
     {
         ASSERT_MSG(aV < myCalculus->nbVertices(), "Vertex is not in the surface mesh vertex range");
+        Vector v = myCalculus->flat(aV)*myCalculus->sharp(aV)*ev;
         myVectorSource( 2*aV ) = v(0);
         myVectorSource( 2*aV+1 ) = v(1);
         myScalarSource( aV ) = v.norm();

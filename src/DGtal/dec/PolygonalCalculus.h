@@ -104,6 +104,9 @@ public:
         mySurfaceMesh(&surf),  myGlobalCacheEnabled(globalInternalCacheEnabled)
     {
         myEmbedder =[&](Face f,Vertex v){ return mySurfaceMesh->position(v);};
+        mySurfaceMesh->computeFaceNormalsFromPositions();
+        mySurfaceMesh->computeVertexNormalsFromFaceNormals();
+        myVertexNormalEmbedder =[&](Vertex v){ return mySurfaceMesh->vertexNormal(v);};
         init();
     };
 
@@ -117,6 +120,42 @@ public:
               const std::function<Real3dPoint(Face,Vertex)> &embedder,
               bool globalInternalCacheEnabled = false):
         mySurfaceMesh(&surf), myEmbedder(embedder), myGlobalCacheEnabled(globalInternalCacheEnabled)
+    {
+        mySurfaceMesh->computeFaceNormalsFromPositions();
+        mySurfaceMesh->computeVertexNormalsFromFaceNormals();
+        myVertexNormalEmbedder =[&](Vertex v){ return mySurfaceMesh->vertexNormal(v);};
+        init();
+    };
+
+    /// Create a Polygonal DEC structure from a surface mesh (@a surf)
+    /// and an embedder for the vertex normal: function with a vertex as parameter
+    /// which outputs the embedding in R^3 of the vertex normal.
+    /// @param surf an instance of SurfaceMesh
+    /// @param embedder an embedder
+    /// @param globalInternalCacheEnabled
+    PolygonalCalculus(const ConstAlias<MySurfaceMesh> surf,
+              const std::function<Real3dPoint(Vertex)> &embedder,
+              bool globalInternalCacheEnabled = false):
+        mySurfaceMesh(&surf), myVertexNormalEmbedder(embedder), myGlobalCacheEnabled(globalInternalCacheEnabled)
+    {
+        myEmbedder =[&](Face f,Vertex v){ return mySurfaceMesh->position(v);};
+        init();
+    };
+
+    /// Create a Polygonal DEC structure from a surface mesh (@a surf)
+    /// and an embedder for the vertex position: function with two parameters, a face and a vertex
+    /// which outputs the embedding in R^3 of the vertex w.r.t. to the face.
+    /// and an embedder for the vertex normal: function with a vertex as parameter
+    /// which outputs the embedding in R^3 of the vertex normal.
+    /// @param surf an instance of SurfaceMesh
+    /// @param pos_embedder an embedder for the position
+    /// @param normal_embedder an embedder for the position
+    /// @param globalInternalCacheEnabled
+    PolygonalCalculus(const ConstAlias<MySurfaceMesh> surf,
+              const std::function<Real3dPoint(Face,Vertex)> &pos_embedder,
+              const std::function<Real3dPoint(Vertex)> &normal_embedder,
+              bool globalInternalCacheEnabled = false):
+        mySurfaceMesh(&surf), myEmbedder(pos_embedder), myVertexNormalEmbedder(normal_embedder), myGlobalCacheEnabled(globalInternalCacheEnabled)
     {
         init();
     };
@@ -482,11 +521,7 @@ public:
     }
 
     Eigen::Vector3d n_v(const Vertex &v) const {
-        Eigen::Vector3d n(0.0, 0.0, 0.0);
-        size_t cpt = 0u;
-        for (auto f : getSurfaceMeshPtr()->incidentFaces(v))
-            n += vectorArea(f);
-        return n.normalized();
+        return myVertexNormalEmbedder(v);
     }
 
     // 3x2 matrix defining the tangent space at v
@@ -507,7 +542,7 @@ public:
         return tanB;
     }
 
-    // 3x2 matrix defining the tangent space at v
+    // 3x2 matrix defining the tangent space at f
     DenseMatrix Tf(const Face &f) const {
         Eigen::Vector3d nf = faceNormal(f);
         assert(std::abs(nf.norm() - 1.0) < 0.001);
@@ -659,6 +694,11 @@ public:
         return M;
     }
 
+    /// Computes the global Connection-Laplace-Beltrami operator by accumulating the
+    /// per face operators.
+    ///
+    /// @param lambda the regualrization parameter for the local Connection-Laplace-Beltrami operators
+    /// @return a sparse 2*nbVertices x 2*nbVertices matrix
     SparseMatrix globalConnectionLaplace(const double lambda=1.0) const
     {
         auto nv = mySurfaceMesh->nbVertices();
@@ -697,10 +737,10 @@ public:
         return lapGlobal;
     }
 
-    /// Compute and returns the global lumped mass matrix
+    /// Compute and returns the global lumped mass matrix tensorized with Id_2 (used for connection laplacian)
     /// (diagonal matrix with Max's weights for each vertex).
-    ///    M(i,i) =   ∑_{adjface f} faceArea(f)/degree(f) ;
-    ///
+    ///    M(2*i,2*i) 		=   ∑_{adjface f} faceArea(f)/degree(f) ;
+    ///    M(2*i+1,2*i+1)   =   M(2*i,2*i)
     /// @return the global lumped mass matrix.
     SparseMatrix doubledGlobalLumpedMassMatrix() const
     {
@@ -901,6 +941,9 @@ private:
 
     ///Embedding function (face,vertex)->R^3 for the vertex position wrt. the face.
     std::function<Real3dPoint(Face, Vertex)> myEmbedder;
+
+    ///Embedding function (vertex)->R^3 for the vertex normal.
+    std::function<Real3dPoint(Vertex)> myVertexNormalEmbedder;
 
     ///Cache containing the face degree
     std::vector<size_t> myFaceDegree;
