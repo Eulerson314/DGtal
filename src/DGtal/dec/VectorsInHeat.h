@@ -53,7 +53,7 @@ namespace DGtal
  * Description of template class 'VectorsInHeat' <p>
  * \brief This class implements @cite Crane2013 on polygonal surfaces  (using @ref modulePolygonalCalculus).
  *
- * see @ref moduleGeodesicsInHeat for details and examples.
+ * see @ref moduleVectorsInHeat for details and examples.
  *
  * @tparam a model of PolygonalCalculus.
  */
@@ -128,10 +128,12 @@ public:
         //may have issues with positive semi-definite matrix.
         SparseMatrix I(myCalculus->nbVertices(),myCalculus->nbVertices());
         I.setIdentity();
+        SparseMatrix laplacian = myCalculus->globalLaplaceBeltrami()  + I*1e-6;
+
         SparseMatrix I2(2*myCalculus->nbVertices(),2*myCalculus->nbVertices());
         I2.setIdentity();
-        SparseMatrix connectionLaplacian = myCalculus->globalConnectionLaplace() + I*1e-6;
-        SparseMatrix laplacian = myCalculus->globalLaplaceBeltrami()  + I2*1e-6;
+        SparseMatrix connectionLaplacian = myCalculus->globalConnectionLaplace() + I2*1e-6;
+
         SparseMatrix mass      = myCalculus->globalLumpedMassMatrix();
         SparseMatrix mass2      = myCalculus->doubledGlobalLumpedMassMatrix();
         SparseMatrix scalarHeatOpe   =  mass + dt*laplacian;
@@ -153,7 +155,6 @@ public:
     void addSource(const Vertex aV,const Vector& v)
     {
         ASSERT_MSG(aV < myCalculus->nbVertices(), "Vertex is not in the surface mesh vertex range");
-        myLastSourceIndex = aV;
         myVectorSource( 2*aV ) = v(0);
         myVectorSource( 2*aV+1 ) = v(1);
         myScalarSource( aV ) = v.norm();
@@ -178,8 +179,8 @@ public:
     }
 
 
-    /// Main computation of the Geodesic In Heat
-    /// @returns the estimated geodesic distances from the sources.
+    /// Main computation of the Vectors In Heat
+    /// @returns the estimated heat diffused vectors from the sources.
     Vector compute() const
     {
         FATAL_ERROR_MSG(myIsInit, "init() method must be called first");
@@ -229,13 +230,10 @@ private:
     Vector myDiracSource;
     Vector myVectorSource;
 
-    ///Vertex index to the last source point (to shift the distances)
-    Vertex myLastSourceIndex;
-
     ///Validitate flag
     bool myIsInit;
 
-}; // end of class GeodesicsInHeat
+}; // end of class VectorsInHeat
 } // namespace DGtal
 
 //                                                                           //
