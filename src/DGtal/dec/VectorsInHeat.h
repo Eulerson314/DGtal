@@ -156,6 +156,7 @@ public:
     {
         ASSERT_MSG(aV < myCalculus->nbVertices(), "Vertex is not in the surface mesh vertex range");
         Vector v = myCalculus->flat(aV)*myCalculus->sharp(aV)*ev;
+        v = v.normalized()*ev.norm();
         myVectorSource( 2*aV ) = v(0);
         myVectorSource( 2*aV+1 ) = v(1);
         myScalarSource( aV ) = v.norm();
