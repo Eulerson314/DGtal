@@ -672,7 +672,7 @@ public:
             reorder.resize(nf);
             DenseMatrix Lap = CovL(f,lambda);
             auto cpt=0;
-            for(auto v = 0;v< mySurfaceMesh->incidentVertices(f);v++)
+            for(auto v : mySurfaceMesh->incidentVertices(f))
             {
                 reorder[ cpt ]= v;
                 ++cpt;
