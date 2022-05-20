@@ -568,7 +568,7 @@ public:
         return tanB;
     }
 
-    Vector toExtrinsicVector(const Vertex v,const Vector& I){
+    Vector toExtrinsicVector(const Vertex v,const Vector& I) const{
         DenseMatrix T = Tv(v);
         return T.col(0)*I(0) + T.col(1)*I(1);
     }
