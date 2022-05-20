@@ -523,7 +523,7 @@ public:
     Vector computeVertexNormal(const Vertex &v) const {
         Vector n(3);
         for (auto f : mySurfaceMesh->incidentFaces(v))
-            n += vectorArea(f);
+            n += faceNormal(f);
         return n.normalized();
     }
 
