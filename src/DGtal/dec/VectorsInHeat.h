@@ -174,22 +174,21 @@ public:
 
     Vector extrinsicVectorSourceAtVertex(const Vertex aV){
         FATAL_ERROR_MSG(myIsInit, "init() method must be called first");
-        DenseMatrix Tv = myCalculus->Tv(aV);
-        return Tv.col(0)*myVectorSource(2*aV) + Tv.col(1)*myVectorSource(2*aV+1);
+        return myCalculus->toExtrinsicVector(aV,intrinsicVectorSourceAtVertex(aV));
     }
 
     Vector intrinsicVectorSourceAtVertex(const Vertex aV){
         FATAL_ERROR_MSG(myIsInit, "init() method must be called first");
         Vector s(2);
         s(0) = myVectorSource(2*aV);
-        s(1) = myVectorSource(2*aV+2);
+        s(1) = myVectorSource(2*aV+1);
         return s;
     }
 
 
     /// Main computation of the Vectors In Heat
     /// @returns the estimated heat diffused vectors from the sources.
-    Vector compute() const
+    std::vector<Vector> compute() const
     {
         FATAL_ERROR_MSG(myIsInit, "init() method must be called first");
         //Heat diffusion
@@ -198,15 +197,14 @@ public:
         Vector diracHeatDiffusion = myScalarHeatSolver.solve(myDiracSource);
         auto surfmesh = myCalculus->getSurfaceMeshPtr();
 
-        Vector result(2*surfmesh->nbVertices());
+        std::vector<Vector> result(surfmesh->nbVertices());
 
         for (auto v = 0;v<surfmesh->nbVertices();v++){
             Vector Y(2);
             Y(0) = vectorHeatDiffusion(2*v);
             Y(1) = vectorHeatDiffusion(2*v+1);
             Y = Y.normalized()*(scalarHeatDiffusion(v)/diracHeatDiffusion(v));
-            result(2*v) = Y(0);
-            result(2*v+1) = Y(1);
+            result[v] = myCalculus->toExtrinsicVector(v,Y);
         }
 
         return result;

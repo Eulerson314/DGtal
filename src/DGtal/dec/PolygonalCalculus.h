@@ -568,6 +568,11 @@ public:
         return tanB;
     }
 
+    Vector toExtrinsicVector(const Vertex v,const Vector& I){
+        DenseMatrix T = Tv(v);
+        return T.col(0)*I(0) + T.col(1)*I(1);
+    }
+
     // Rotation matrix to align n_v to n_f
     // https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
     DenseMatrix Qvf(const Vertex &v, const Face &f) const {
