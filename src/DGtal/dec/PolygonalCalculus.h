@@ -741,20 +741,21 @@ public:
             for(auto i=0u; i < nf; ++i)
                 for(auto j=0u; j < nf; ++j)
                 {
-                    for (short k1 = 0;k1<2;k1++){
-                        for (short k2 = 0;k2<2;k2++){
-                            auto v = Lap(2*i+k1,2*j+k2);
-                            if (v!= 0.0){
-                                if (!nullIfBoundary || (!isBoundary[reorder[i]] && !isBoundary[reorder[j]]) )
+                    if (!nullIfBoundary || !(isBoundary[reorder[i]] && isBoundary[reorder[j]]) ){
+                        for (short k1 = 0;k1<2;k1++){
+                            for (short k2 = 0;k2<2;k2++){
+                                auto v = Lap(2*i+k1,2*j+k2);
+                                if (v!= 0.0){
                                     triplets.emplace_back(Triplet(2*reorder[i]+k1,2*reorder[j]+k2,v));
+                                }
                             }
                         }
-                    }
-                    local.setFromTriplets(triplets.begin(), triplets.end());
-                    lapGlobal += local;
+                        local.setFromTriplets(triplets.begin(), triplets.end());
+                        lapGlobal += local;
 
-                    triplets.clear();
-                    local.setZero();
+                        triplets.clear();
+                        local.setZero();
+                    }
                 }
         }
         return lapGlobal;
