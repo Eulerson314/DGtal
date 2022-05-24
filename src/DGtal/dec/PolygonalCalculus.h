@@ -575,9 +575,9 @@ public:
     }
 
     std::vector<Vector> toExtrinsicVectors(const std::vector<Vector>& I) const{
-        std::vector<Vector> ext(I.size());
+        std::vector<Vector> ext(mySurfaceMesh->nbVertices());
         for (auto v=0;v<mySurfaceMesh->nbVertices();v++)
-            ext[v] = toExtrinsicVector(I[v]);
+            ext[v] = toExtrinsicVector(v,I[v]);
         return ext;
     }
 
