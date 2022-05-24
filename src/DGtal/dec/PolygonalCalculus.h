@@ -574,6 +574,13 @@ public:
         return T.col(0)*I(0) + T.col(1)*I(1);
     }
 
+    std::vector<Vector> toExtrinsicVectors(const std::vector<Vector>& I) const{
+        std::vector<Vector> ext(I.size());
+        for (auto v=0;v<mySurfaceMesh->nbVertices();v++)
+            ext[v] = toExtrinsicVector(I[v]);
+        return ext;
+    }
+
     // Rotation matrix to align n_v to n_f
     // https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
     DenseMatrix Qvf(const Vertex &v, const Face &f) const {

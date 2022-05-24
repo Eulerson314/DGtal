@@ -150,6 +150,7 @@ public:
     }
 
     /** Adds a source vector (3D extrinsic) at a vertex @e aV
+     *  the vector gets projected to the tangent space
     * @param aV the Vertex
      **/
     void addSource(const Vertex aV,const Vector& ev)
@@ -187,7 +188,7 @@ public:
 
 
     /// Main computation of the Vectors In Heat
-    /// @returns the estimated heat diffused vectors from the sources.
+    /// @returns the estimated heat diffused vectors from the sources expressed in the intrinsic base
     std::vector<Vector> compute() const
     {
         FATAL_ERROR_MSG(myIsInit, "init() method must be called first");
@@ -204,7 +205,7 @@ public:
             Y(0) = vectorHeatDiffusion(2*v);
             Y(1) = vectorHeatDiffusion(2*v+1);
             Y = Y.normalized()*(scalarHeatDiffusion(v)/diracHeatDiffusion(v));
-            result[v] = myCalculus->toExtrinsicVector(v,Y);
+            result[v] = Y;
         }
 
         return result;
