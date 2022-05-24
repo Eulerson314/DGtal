@@ -188,7 +188,7 @@ public:
 
 
     /// Main computation of the Vectors In Heat
-    /// @returns the estimated heat diffused vectors from the sources expressed in the intrinsic base
+    /// @returns the estimated heat diffused vectors from the sources expressed
     std::vector<Vector> compute() const
     {
         FATAL_ERROR_MSG(myIsInit, "init() method must be called first");
@@ -205,7 +205,7 @@ public:
             Y(0) = vectorHeatDiffusion(2*v);
             Y(1) = vectorHeatDiffusion(2*v+1);
             Y = Y.normalized()*(scalarHeatDiffusion(v)/diracHeatDiffusion(v));
-            result[v] = Y;
+            result[v] = myCalculus->toExtrinsicVector(v,Y);
         }
 
         return result;
