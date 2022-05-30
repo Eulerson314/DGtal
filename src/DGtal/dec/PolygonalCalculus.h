@@ -362,6 +362,45 @@ public:
         return brack;
     }
 
+DenseMatrix Nvf(const Face f){
+    auto nv = mySurfaceMesh->incidentVertices(f).size();
+    DenseMatrix N(3,nv);
+    size_t cpt = 0;
+    for (auto v : mySurfaceMesh->incidentVertices(f)){
+        N.block(0,cpt,3,1) = n_v(v);
+        cpt++;
+    }
+    return N;
+}
+
+Vector toVector(const Real3dPoint& x){
+    Vector X(3);
+    for (int i = 0;i<3;i++)
+        X(i) = x(i);
+    return X;
+}
+
+Vector edgeVector(const Vertex i,const Vertex j){
+    return toVector(mySurfaceMesh->position(j)-mySurfaceMesh->position(i));
+}
+
+DenseMatrix ImposedNormalsGradient(const Face f){
+    auto vertices = mySurfaceMesh->incidentVertices(f);
+    auto nv = vertices.size();
+    DenseMatrix G = DenseMatrix::Zero(3,nv);
+    DenseMatrix N = Nvf(f);
+    for (size_t cpt = 0;cpt < nv;cpt++){
+        DenseMatrix H = DenseMatrix::Zero(nv,nv);
+        auto i = vertices[cpt];
+        auto j = vertices[(cpt+1)%nv];
+        Vector e = edgeVector(i,j);
+        H(cpt,cpt) = 0.5;
+        H((cpt+1)%nv,(cpt+1)%nv) = 0.5;
+        G += bracket(edgeVector(i,j))*N*H;
+    }
+    return G;
+}
+
     /// Gradient operator of the face.
     /// @param f the face
     /// @return 3 x degree matrix
@@ -370,6 +409,8 @@ public:
         if (checkCache(GRAD_,f))
             return myGlobalCache[GRAD_][f];
 
+        if (correctedGradient)
+            return ImposedNormalsGradient(f);
         DenseMatrix op = -1.0/faceArea(f) * bracket( faceNormal(f) ) * coGradient(f);
 
         setInCache(GRAD_,f,op);
@@ -457,9 +498,9 @@ public:
         if (checkCache(M_,f))
             return myGlobalCache[M_][f];
 
-        auto Uf=sharp(f);
+        auto Gf=gradient(f);
         auto Pf=P(f);
-        DenseMatrix op = faceArea(f) * Uf.transpose()*Uf + lambda * Pf.transpose()*Pf;
+        DenseMatrix op = faceArea(f) * Gf.transpose()*Gf + lambda * Pf.transpose()*Pf;
 
         setInCache(M_,f,op);
         return op;
@@ -922,6 +963,10 @@ public:
         return true;
     }
 
+    void setCorrectedGradient(bool b){
+        correctedGradient = b;
+    }
+
     // ------------------------- Protected Datas ------------------------------
 protected:
 
@@ -966,6 +1011,8 @@ protected:
 
     // ------------------------- Internals ------------------------------------
 private:
+
+    bool correctedGradient = false;
 
     ///Underlying SurfaceMesh
     const MySurfaceMesh *mySurfaceMesh;
