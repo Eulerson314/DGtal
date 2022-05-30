@@ -134,7 +134,7 @@ public:
     /// @param embedder an embedder
     /// @param globalInternalCacheEnabled
     PolygonalCalculus(const ConstAlias<MySurfaceMesh> surf,
-              const std::function<Real3dPoint(Vertex)> &embedder,
+              const std::function<Vector(Vertex)> &embedder,
               bool globalInternalCacheEnabled = false):
         mySurfaceMesh(&surf), myVertexNormalEmbedder(embedder), myGlobalCacheEnabled(globalInternalCacheEnabled)
     {
@@ -153,7 +153,7 @@ public:
     /// @param globalInternalCacheEnabled
     PolygonalCalculus(const ConstAlias<MySurfaceMesh> surf,
               const std::function<Real3dPoint(Face,Vertex)> &pos_embedder,
-              const std::function<Real3dPoint(Vertex)> &normal_embedder,
+              const std::function<Vector(Vertex)> &normal_embedder,
               bool globalInternalCacheEnabled = false):
         mySurfaceMesh(&surf), myEmbedder(pos_embedder), myVertexNormalEmbedder(normal_embedder), myGlobalCacheEnabled(globalInternalCacheEnabled)
     {
