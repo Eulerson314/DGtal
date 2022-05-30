@@ -362,7 +362,7 @@ public:
         return brack;
     }
 
-DenseMatrix Nvf(const Face f){
+DenseMatrix Nvf(const Face f) const {
     auto nv = mySurfaceMesh->incidentVertices(f).size();
     DenseMatrix N(3,nv);
     size_t cpt = 0;
@@ -373,18 +373,18 @@ DenseMatrix Nvf(const Face f){
     return N;
 }
 
-Vector toVector(const Real3dPoint& x){
+static Vector toVector(const Real3dPoint& x){
     Vector X(3);
     for (int i = 0;i<3;i++)
         X(i) = x(i);
     return X;
 }
 
-Vector edgeVector(const Vertex i,const Vertex j){
+Vector edgeVector(const Vertex i,const Vertex j) const{
     return toVector(mySurfaceMesh->position(j)-mySurfaceMesh->position(i));
 }
 
-DenseMatrix ImposedNormalsGradient(const Face f){
+DenseMatrix ImposedNormalsGradient(const Face f) const{
     auto vertices = mySurfaceMesh->incidentVertices(f);
     auto nv = vertices.size();
     DenseMatrix G = DenseMatrix::Zero(3,nv);
