@@ -370,8 +370,6 @@ public:
         if (checkCache(GRAD_,f))
             return myGlobalCache[GRAD_][f];
 
-        if (correctedGradient)
-            return ImposedNormalsGradient(f);
         DenseMatrix op = -1.0/faceArea(f) * bracket( faceNormal(f) ) * coGradient(f);
 
         setInCache(GRAD_,f,op);
@@ -519,7 +517,10 @@ public:
     }
 
     static Vector toVector(const Eigen::Vector3d& x){
-        return Eigen::Vector3d(x(0),x(1),x(2));
+        Vector X(3);
+        for (int i = 0;i<3;i++)
+            X(i) = x(i);
+        return X;
     }
 
     static Eigen::Vector3d toVec3(const Real3dPoint& x){
@@ -928,10 +929,6 @@ public:
         return true;
     }
 
-    void setCorrectedGradient(bool b){
-        correctedGradient = b;
-    }
-
     // ------------------------- Protected Datas ------------------------------
 protected:
 
@@ -977,7 +974,6 @@ protected:
     // ------------------------- Internals ------------------------------------
 protected:
 
-    bool correctedGradient = false;
 
     ///Underlying SurfaceMesh
     const MySurfaceMesh *mySurfaceMesh;
