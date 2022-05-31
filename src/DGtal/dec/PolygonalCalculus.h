@@ -362,45 +362,6 @@ public:
         return brack;
     }
 
-DenseMatrix Nvf(const Face f) const {
-    auto nv = mySurfaceMesh->incidentVertices(f).size();
-    DenseMatrix N(3,nv);
-    size_t cpt = 0;
-    for (auto v : mySurfaceMesh->incidentVertices(f)){
-        N.block(0,cpt,3,1) = n_v(v);
-        cpt++;
-    }
-    return N;
-}
-
-static Vector toVector(const Real3dPoint& x){
-    Vector X(3);
-    for (int i = 0;i<3;i++)
-        X(i) = x(i);
-    return X;
-}
-
-Vector edgeVector(const Vertex i,const Vertex j) const{
-    return toVector(mySurfaceMesh->position(j)-mySurfaceMesh->position(i));
-}
-
-DenseMatrix ImposedNormalsGradient(const Face f) const{
-    auto vertices = mySurfaceMesh->incidentVertices(f);
-    auto nv = vertices.size();
-    DenseMatrix G = DenseMatrix::Zero(3,nv);
-    DenseMatrix N = Nvf(f);
-    for (size_t cpt = 0;cpt < nv;cpt++){
-        DenseMatrix H = DenseMatrix::Zero(nv,nv);
-        auto i = vertices[cpt];
-        auto j = vertices[(cpt+1)%nv];
-        Vector e = edgeVector(i,j);
-        H(cpt,cpt) = 0.5;
-        H((cpt+1)%nv,(cpt+1)%nv) = 0.5;
-        G += bracket(edgeVector(i,j))*N*H;
-    }
-    return G;
-}
-
     /// Gradient operator of the face.
     /// @param f the face
     /// @return 3 x degree matrix
@@ -1010,7 +971,7 @@ protected:
 
 
     // ------------------------- Internals ------------------------------------
-private:
+protected:
 
     bool correctedGradient = false;
 
