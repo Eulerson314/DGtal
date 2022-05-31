@@ -518,6 +518,10 @@ public:
         return u - (u.dot(n) / n.squaredNorm()) * n;
     }
 
+    static Vector toVector(const Eigen::Vector3d& x){
+        return Eigen::Vector3d(x(0),x(1),x(2));
+    }
+
     static Eigen::Vector3d toVec3(const Real3dPoint& x){
         return Eigen::Vector3d(x(0),x(1),x(2));
     }
