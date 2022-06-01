@@ -721,6 +721,28 @@ public:
         return M;
     }
 
+    /// Compute and returns the global lumped mass matrix
+    /// (diagonal matrix with Max's weights for each vertex).
+    ///    M(i,i) =   ∑_{adjface f} faceArea(f)/degree(f) ;
+    ///
+    /// @return the global lumped mass matrix.
+    SparseMatrix globalInverseLumpedMassMatrix() const
+    {
+        SparseMatrix M(mySurfaceMesh->nbVertices(), mySurfaceMesh->nbVertices());
+        std::vector<Triplet> triplets;
+        for(auto v=0; v < mySurfaceMesh->nbVertices(); ++v)
+        {
+            auto faces = mySurfaceMesh->incidentFaces(v);
+            auto varea = 0.0;
+            for(auto f: faces)
+                varea += myFaceDegree[f]/faceArea(f);
+            triplets.emplace_back(Triplet(v,v,varea));
+        }
+        M.setFromTriplets(triplets.begin(),triplets.end());
+        return M;
+    }
+
+
     /// Computes the global Connection-Laplace-Beltrami operator by accumulating the
     /// per face operators.
     ///
