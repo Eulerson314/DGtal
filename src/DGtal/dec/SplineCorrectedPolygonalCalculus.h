@@ -260,11 +260,11 @@ public:
         static const double lambda = 1./60.;
         for (auto v = 0u;v<nf;v++){
             auto i = vertices[v];
-            Vector3 xi = toVec3(myEmbedder(f,i));
-            Vector3 ni = toVec3(myVertexNormalEmbedder(i));
+            Vector3 xi = toVec3(this->myEmbedder(f,i));
+            Vector3 ni = toVec3(this->myVertexNormalEmbedder(i));
             auto j = vertices[(v+1)%nf];
-            Vector3 xj = toVec3(myEmbedder(f,j));
-            auto nj = toVec3(myVertexNormalEmbedder(j));
+            Vector3 xj = toVec3(this->myEmbedder(f,j));
+            auto nj = toVec3(this->myVertexNormalEmbedder(j));
             Spline S = splineMaker.makeSpline(
                         xi,
                         ni,
@@ -294,10 +294,10 @@ public:
             auto i = vertices[v];
             auto j = vertices[(v+1)%nf];
             Spline S = splineMaker.makeSpline(
-                        toVec3(myEmbedder(f,i)),
-                        toVec3(myVertexNormalEmbedder(i)),
-                        toVec3(myEmbedder(f,j)),
-                        toVec3(myVertexNormalEmbedder(j))
+                        toVec3(this->myEmbedder(f,i)),
+                        toVec3(this->myVertexNormalEmbedder(i)),
+                        toVec3(this->myEmbedder(f,j)),
+                        toVec3(this->myVertexNormalEmbedder(j))
                         );
             auto T0 = S.evalTangent(0);
             auto T1 = S.evalTangent(1);
@@ -317,10 +317,10 @@ public:
             auto i = vertices[v];
             auto j = vertices[(v+1)%nf];
             Spline S = splineMaker.makeSpline(
-                        toVec3(myEmbedder(f,i)),
-                        toVec3(myVertexNormalEmbedder(i)),
-                        toVec3(myEmbedder(f,j)),
-                        toVec3(myVertexNormalEmbedder(j))
+                        toVec3(this->myEmbedder(f,i)),
+                        toVec3(this->myVertexNormalEmbedder(i)),
+                        toVec3(this->myEmbedder(f,j)),
+                        toVec3(this->myVertexNormalEmbedder(j))
                         );
             midpoints.block(0,v,3,1) = S(0.5);
         }
