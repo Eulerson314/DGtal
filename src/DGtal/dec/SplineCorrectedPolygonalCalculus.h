@@ -254,7 +254,7 @@ public:
     /// @return a vector
     Vector vectorArea(const Face f) const override
     {
-        auto vertices = mySurfaceMesh->incidentVertices(f);
+        auto vertices = this->mySurfaceMesh->incidentVertices(f);
         auto nf = vertices.size();
         Vector af = Vector::Zero(3);
         static const double lambda = 1./60.;
@@ -286,7 +286,7 @@ public:
 
     DenseMatrix coGradient(const Face f) const override
     {
-        auto vertices = mySurfaceMesh->incidentVertices(f);
+        auto vertices = this->mySurfaceMesh->incidentVertices(f);
         auto nf = vertices.size();
         DenseMatrix CGS = DenseMatrix::Zero(3,nf);
         static const double lambda = 1./6.;
@@ -294,9 +294,9 @@ public:
             auto i = vertices[v];
             auto j = vertices[(v+1)%nf];
             Spline S = splineMaker.makeSpline(
-                        Calculus::toVec3(myEmbedder(f,i)),
+                        toVec3(myEmbedder(f,i)),
                         toVec3(myVertexNormalEmbedder(i)),
-                        Calculus::toVec3(myEmbedder(f,j)),
+                        toVec3(myEmbedder(f,j)),
                         toVec3(myVertexNormalEmbedder(j))
                         );
             auto T0 = S.evalTangent(0);
@@ -310,16 +310,16 @@ public:
 
     DenseMatrix B(const Face f) const override
     {
-        auto vertices = mySurfaceMesh->incidentVertices(f);
+        auto vertices = this->mySurfaceMesh->incidentVertices(f);
         auto nf = vertices.size();
         DenseMatrix midpoints = DenseMatrix::Zero(nf,3);
         for (auto v = 0u;v<nf;v++){
             auto i = vertices[v];
             auto j = vertices[(v+1)%nf];
             Spline S = splineMaker.makeSpline(
-                        Calculus::toVec3(myEmbedder(f,i)),
+                        toVec3(myEmbedder(f,i)),
                         toVec3(myVertexNormalEmbedder(i)),
-                        Calculus::toVec3(myEmbedder(f,j)),
+                        toVec3(myEmbedder(f,j)),
                         toVec3(myVertexNormalEmbedder(j))
                         );
             midpoints.block(0,v,3,1) = S(0.5);
@@ -329,14 +329,14 @@ public:
 
     DenseMatrix M(const Face f, const double lambda=1.0) const override
     {
-        if (checkCache(M_,f))
-            return myGlobalCache[M_][f];
+        if (this->checkCache(this->M_,f))
+            return this->myGlobalCache[this->M_][f];
 
-        auto Gf=gradient(f);
-        auto Pf=P(f);
-        DenseMatrix op = faceArea(f) * Gf.transpose()*Gf + lambda * Pf.transpose()*Pf;
+        auto Gf=this->gradient(f);
+        auto Pf=this->P(f);
+        DenseMatrix op = this->faceArea(f) * Gf.transpose()*Gf + lambda * Pf.transpose()*Pf;
 
-        setInCache(M_,f,op);
+        this->setInCache(this->M_,f,op);
         return op;
     }
 }; // end of class SplineCorrectedPolygonalCalculus
