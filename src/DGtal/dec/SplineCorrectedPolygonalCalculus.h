@@ -239,15 +239,15 @@ struct SplineMaker {
 
     SplineMaker splineMaker;
 
+public:
+    // ---------------------- Redefined Operators ---------------------------
+
     static Eigen::Vector3d toVec3(const Vector& x){
         return Eigen::Vector3d(x(0),x(1),x(2));
     }
     static Eigen::Vector3d toVec3(const Real3dPoint& x){
         return Eigen::Vector3d(x(0),x(1),x(2));
     }
-
-public:
-    // ---------------------- Redefined Operators ---------------------------
 
     /// Polygonal (corrected) vector area.
     /// @param f the face
