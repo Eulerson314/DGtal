@@ -155,7 +155,7 @@ public:
     SplineCorrectedPolygonalCalculus & operator= ( SplineCorrectedPolygonalCalculus && other ) = delete;
 
     // ----------------------- Inner Spline Classes --------------------------------------
-protected:
+public:
 struct Spline{
     static constexpr int DEGREE = 3;
     DenseMatrix coeffs;
