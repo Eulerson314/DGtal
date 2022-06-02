@@ -239,6 +239,13 @@ struct SplineMaker {
 
     SplineMaker splineMaker;
 
+    static Eigen::Vector3d toVec3(const Vector& x){
+        return Eigen::Vector3d(x(0),x(1),x(2));
+    }
+    static Eigen::Vector3d toVec3(const Real3dPoint& x){
+        return Eigen::Vector3d(x(0),x(1),x(2));
+    }
+
 public:
     // ---------------------- Redefined Operators ---------------------------
 
@@ -253,10 +260,10 @@ public:
         static const double lambda = 1./60.;
         for (auto v = 0u;v<nf;v++){
             auto i = vertices[v];
-            Vector3 xi = Calculus::toVec3(myEmbedder(f,i));
+            Vector3 xi = toVec3(myEmbedder(f,i));
             Vector3 ni = toVec3(myVertexNormalEmbedder(i));
             auto j = vertices[(v+1)%nf];
-            Vector3 xj = Calculus::toVec3(myEmbedder(f,j));
+            Vector3 xj = toVec3(myEmbedder(f,j));
             auto nj = toVec3(myVertexNormalEmbedder(j));
             Spline S = splineMaker.makeSpline(
                         xi,
@@ -332,212 +339,6 @@ public:
         setInCache(M_,f,op);
         return op;
     }
-
-
-
-    // ----------------------- Interface --------------------------------------
-
-
-    /// Update the embedding function.
-    /// @param externalFunctor a new embedding functor (Face,Vertex)->RealPoint.
-    void setEmbedder(const std::function<Real3dPoint(Face,Vertex)> &externalFunctor)
-    {
-        myEmbedder = externalFunctor;
-    }
-
-    // ----------------------- Cache mechanism --------------------------------------
-
-    /// Generic method to compute all the per face DenseMatrices and store them in an
-    /// indexed container.
-    ///
-    /// Usage example:
-    /// @code
-    ///auto opM = [&](const SplineCorrectedPolygonalCalculus<Mesh>::Face f){ return calculus.M(f);};
-    ///auto cacheM = boxCalculus.getOperatorCacheMatrix(opM);
-    ///...
-    /////Now you have access to the cached values and mixed them with un-cached ones
-    ///  Face f = ...;
-    ///  auto res = cacheM[f] * calculus.D(f) * phi;
-    /// ...
-    ///@endcode
-    ///
-    /// @param perFaceOperator the per face operator
-    /// @return an indexed container of all DenseMatrix operators (indexed per Face).
-    std::vector<DenseMatrix> getOperatorCacheMatrix(const std::function<DenseMatrix(Face)> &perFaceOperator) const
-    {
-        std::vector<DenseMatrix> cache;
-        for(auto f=0; f < mySurfaceMesh->nbFaces(); ++f)
-            cache.push_back(perFaceOperator(f));
-        return cache;
-    }
-
-    /// Generic method to compute all the per face Vector and store them in an
-    /// indexed container.
-    ///
-    /// Usage example:
-    /// @code
-    ///auto opCentroid = [&](const SplineCorrectedPolygonalCalculus<Mesh>::Face f){ return calculus.centroid(f);};
-    ///auto cacheCentroid = boxCalculus.getOperatorCacheVector(opCentroid);
-    ///...
-    /////Now you have access to the cached values and mixed them with un-cached ones
-    ///  Face f = ...;
-    ///  auto res = calculus.P(f) * cacheCentroid[f] ;
-    /// ...
-    ///@endcode
-    ///
-    /// @param perFaceVectorOperator the per face operator
-    /// @return an indexed container of all Vector quantities (indexed per Face).
-    std::vector<Vector> getOperatorCacheVector(const std::function<Vector(Face)> &perFaceVectorOperator) const
-    {
-        std::vector<Vector> cache;
-        for(auto f=0; f < mySurfaceMesh->nbFaces(); ++f)
-            cache.push_back(perFaceVectorOperator(f));
-        return cache;
-    }
-
-    /// Enable the internal global cache for operators.
-    ///
-    void enableInternalGlobalCache()
-    {
-        myGlobalCacheEnabled = true;
-    }
-
-    /// Disable the internal global cache for operators.
-    /// This method will also clean up the
-    void disableInternalGlobalCache()
-    {
-        myGlobalCacheEnabled = false;
-        myGlobalCache.clear();
-    }
-
-    // ----------------------- Common --------------------------------------
-public:
-
-    /// Update the internal cache structures
-    /// (e.g. degree of each face).
-    void init()
-    {
-        updateFaceDegree();
-    }
-
-    /// Helper to retrieve the degree of the face from the cache.
-    /// @param f the face
-    /// @return the number of vertices of the face.
-    size_t faceDegree(Face f) const
-    {
-        return myFaceDegree[f];
-    }
-
-    /// @return the number of vertices of the underlying surface mesh.
-    size_t nbVertices() const
-    {
-        return mySurfaceMesh->nbVertices();
-    }
-
-    /// @return the number of faces of the underlying surface mesh.
-    size_t nbFaces() const
-    {
-        return mySurfaceMesh->nbFaces();
-    }
-
-    /// @returns the degree of the face f (number of vertices)
-    /// @param f the face
-    size_t degree(const Face f) const
-    {
-        return myFaceDegree[f];
-    }
-
-    /// @returns an pointer to the underlying SurfaceMash object.
-    const MySurfaceMesh * getSurfaceMeshPtr() const
-    {
-        return mySurfaceMesh;
-    }
-
-    /**
-   * Writes/Displays the object on an output stream.
-   * @param out the output stream where the object is written.
-   */
-    void selfDisplay ( std::ostream & out ) const
-    {
-        out << "[SplineCorrectedPolygonalCalculus]: ";
-        if (myGlobalCacheEnabled)
-            out<< "internal cache enabled, ";
-        else
-            out<<"internal cache disabled, ";
-        out <<"SurfaceMesh="<<*mySurfaceMesh;
-    }
-
-    /**
-   * Checks the validity/consistency of the object.
-   * @return 'true' if the object is valid, 'false' otherwise.
-   */
-    bool isValid() const
-    {
-        return true;
-    }
-
-    // ------------------------- Protected Datas ------------------------------
-protected:
-
-    ///Enum for operators in the internal cache strategy
-    enum OPERATOR { X_, D_, E_, A_, COGRAD_, GRAD_, FLAT_, B_, SHARP_, P_, M_, DIVERGENCE_, CURL_, L_ };
-
-    /// Update the face degree cache
-    void updateFaceDegree()
-    {
-        myFaceDegree.resize(mySurfaceMesh->nbFaces());
-        for(auto f = 0; f <  mySurfaceMesh->nbFaces(); ++f)
-        {
-            auto vertices = mySurfaceMesh->incidentVertices(f);
-            auto nf = vertices.size();
-            myFaceDegree[f] = nf;
-        }
-    }
-
-    /// Check internal cache if enabled.
-    /// @param key the operator name
-    /// @param f the face
-    /// @returns true if the operator "key" for the face f has been computed.
-    bool checkCache(OPERATOR key, const Face f) const
-    {
-        if (myGlobalCacheEnabled)
-            if (myGlobalCache[key].find(f) != myGlobalCache[key].end())
-                return true;
-        return false;
-    }
-
-    /// Set an operator in the internal cache.
-    /// @param key the operator name
-    /// @param f the face
-    /// @param ope the operator to store
-    void setInCache(OPERATOR key, const Face f,
-            const DenseMatrix &ope) const
-    {
-        if (myGlobalCacheEnabled)
-            myGlobalCache[key][f]  = ope;
-    }
-
-
-    // ------------------------- Internals ------------------------------------
-protected:
-
-
-    ///Underlying SurfaceMesh
-    const MySurfaceMesh *mySurfaceMesh;
-
-    ///Embedding function (face,vertex)->R^3 for the vertex position wrt. the face.
-    std::function<Real3dPoint(Face, Vertex)> myEmbedder;
-
-    ///Embedding function (vertex)->R^3 for the vertex normal.
-    std::function<Vector(Vertex)> myVertexNormalEmbedder;
-
-    ///Cache containing the face degree
-    std::vector<size_t> myFaceDegree;
-
-    ///Global cache
-    bool myGlobalCacheEnabled;
-    mutable std::array<std::unordered_map<Face,DenseMatrix>, 14> myGlobalCache;
-
 }; // end of class SplineCorrectedPolygonalCalculus
 
 /**
