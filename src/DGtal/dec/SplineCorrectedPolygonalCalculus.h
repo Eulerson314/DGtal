@@ -326,19 +326,6 @@ public:
         }
         return midpoints;
     }
-
-    DenseMatrix M(const Face f, const double lambda=1.0) const override
-    {
-        if (this->checkCache(this->M_,f))
-            return this->myGlobalCache[this->M_][f];
-
-        auto Gf=this->gradient(f);
-        auto Pf=this->P(f);
-        DenseMatrix op = this->faceArea(f) * Gf.transpose()*Gf + lambda * Pf.transpose()*Pf;
-
-        this->setInCache(this->M_,f,op);
-        return op;
-    }
 }; // end of class SplineCorrectedPolygonalCalculus
 
 /**
