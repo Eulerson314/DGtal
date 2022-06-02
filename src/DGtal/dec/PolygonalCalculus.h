@@ -457,9 +457,9 @@ public:
         if (checkCache(M_,f))
             return myGlobalCache[M_][f];
 
-        auto Gf=gradient(f);
+        auto Uf=sharp(f);
         auto Pf=P(f);
-        DenseMatrix op = faceArea(f) * Gf.transpose()*Gf + lambda * Pf.transpose()*Pf;
+        DenseMatrix op = faceArea(f) * Uf.transpose()*Uf + lambda * Pf.transpose()*Pf;
 
         setInCache(M_,f,op);
         return op;
