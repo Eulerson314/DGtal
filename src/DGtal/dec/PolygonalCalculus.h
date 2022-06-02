@@ -291,7 +291,7 @@ public:
     /// Polygonal (corrected) vector area.
     /// @param f the face
     /// @return a vector
-    Vector vectorArea(const Face f) const
+    virtual Vector vectorArea(const Face f) const
     {
         Real3dPoint af(0.0,0.0,0.0);
         auto vertices = mySurfaceMesh->incidentVertices(f);
@@ -342,7 +342,7 @@ public:
     /// co-Gradient operator of the face
     /// @param f the face
     /// @return a 3 x degree matrix
-    DenseMatrix coGradient(const Face f) const
+    virtual DenseMatrix coGradient(const Face f) const
     {
         if (checkCache(COGRAD_,f))
             return myGlobalCache[COGRAD_][f];
@@ -392,7 +392,7 @@ public:
     /// Edge mid-point operator of the face.
     /// @param f the face
     /// @return a degree x 3 matrix
-    DenseMatrix B(const Face f) const
+    virtual DenseMatrix B(const Face f) const
     {
         if (checkCache(B_,f))
             return myGlobalCache[B_][f];
@@ -452,7 +452,7 @@ public:
     /// @param f the face
     /// @param lambda the regularization parameter
     /// @return a degree x degree matrix
-    DenseMatrix M(const Face f, const double lambda=1.0) const
+    virtual DenseMatrix M(const Face f, const double lambda=1.0) const
     {
         if (checkCache(M_,f))
             return myGlobalCache[M_][f];
