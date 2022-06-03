@@ -284,11 +284,12 @@ public:
         return Eigen::Vector3d(x(0),x(1),x(2));
     }
 
-    Vector projectOnVertexTangentPlane(const Vector& e,Vertex v){
+    Vector projectOnVertexTangentPlane(const Vector& e,Vertex v) const{
         DenseMatrix T = this->Tv(v);
         return (T*T.transpose()*e).col(0);
     }
-    Spline makeSpline(Face f,Vertex i,Vertex j){
+
+    Spline makeSpline(Face f,Vertex i,Vertex j) const {
             Vector3 xi = toVec3(this->myEmbedder(f,i));
             Vector3 xj = toVec3(this->myEmbedder(f,j));
             Spline S;
