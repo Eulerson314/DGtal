@@ -193,7 +193,7 @@ struct Spline{
         T(3) = 3*t*t;
         T(2) = 2*t;
         T(1) = 1;
-        return (coeffs*T).col(0).normalized();
+        return (coeffs*T).col(0);
     }
     TRealPoint evalTangentAsPoint(double t) const {
         Vector X = evalTangent(t);
@@ -206,7 +206,7 @@ struct Spline{
         Vector T = Vector::Zero(4);
         T(3) = 6*t;
         T(2) = 2;
-        return (coeffs*T).col(0).normalized();
+        return (coeffs*T).col(0);
     }
     TRealPoint evalNormalAsPoint(double t) const {
         Vector X = evalNormal(t);
@@ -284,6 +284,10 @@ public:
         return Eigen::Vector3d(x(0),x(1),x(2));
     }
 
+    Vector projectOnVertexTangentPlane(const Vector& e,Vertex v){
+        DenseMatrix T = this->Tv(v);
+        return (T*T.transpose()*e).col(0);
+    }
     /// Polygonal (corrected) vector area.
     /// @param f the face
     /// @return a vector
@@ -296,24 +300,31 @@ public:
         for (auto v = 0u;v<nf;v++){
             auto i = vertices[v];
             Vector3 xi = toVec3(this->myEmbedder(f,i));
-            Vector3 ni = toVec3(this->myVertexNormalEmbedder(i));
             auto j = vertices[(v+1)%nf];
             Vector3 xj = toVec3(this->myEmbedder(f,j));
-            auto nj = toVec3(this->myVertexNormalEmbedder(j));
-            Spline S = splineMaker.makeNormalSpline(
-                        xi,
-                        ni,
-                        xj,
-                        nj
-                        );
+            Spline S;
+            if (false){
+                Vector3 ni = toVec3(this->myVertexNormalEmbedder(i));
+                Vector3 nj = toVec3(this->myVertexNormalEmbedder(j));
+                S = splineMaker.makeNormalSpline(xi,ni,xj,nj);
+            }
+            else {
+                Vector3 e = xj-xi;
+                S = splineMaker.makeTangentSpline(xi,
+                                                 this->projectOnVertexTangentPlane(e,i),
+                                                  xj,
+                                                 this->projectOnVertexTangentPlane(e,j));
+            }
             Vector3 T0 = toVec3(S.evalTangent(0));
             Vector3 T1 = toVec3(S.evalTangent(1));
             Vector3 TH = toVec3(S.evalTangent(0.5));
+            Vector3 N0 = toVec3(S.evalNormal(0));
+            Vector3 N1 = toVec3(S.evalNormal(1));
             af += lambda*(
                         14*(xi.cross(T0) + xj.cross(T1))
                         +32*toVec3(S(0.5)).cross(TH)
-                        + xi.cross(ni)
-                        - xj.cross(nj)
+                        + xi.cross(N0)
+                        - xj.cross(N1)
                         );
         }
         return af;
@@ -328,12 +339,19 @@ public:
         for (auto v = 0u;v<nf;v++){
             auto i = vertices[v];
             auto j = vertices[(v+1)%nf];
-            Spline S = splineMaker.makeNormalSpline(
-                        toVec3(this->myEmbedder(f,i)),
-                        toVec3(this->myVertexNormalEmbedder(i)),
-                        toVec3(this->myEmbedder(f,j)),
-                        toVec3(this->myVertexNormalEmbedder(j))
-                        );
+            Spline S;
+            if (false){
+                Vector3 ni = toVec3(this->myVertexNormalEmbedder(i));
+                Vector3 nj = toVec3(this->myVertexNormalEmbedder(j));
+                S = splineMaker.makeNormalSpline(xi,ni,xj,nj);
+            }
+            else {
+                Vector3 e = xj-xi;
+                S = splineMaker.makeTangentSpline(xi,
+                                                 this->projectOnVertexTangentPlane(e,i),
+                                                  xj,
+                                                 this->projectOnVertexTangentPlane(e,j));
+            }
             auto T0 = S.evalTangent(0);
             auto T1 = S.evalTangent(1);
             auto TH = S.evalTangent(0.5);
@@ -351,22 +369,25 @@ public:
         for (auto v = 0u;v<nf;v++){
             auto i = vertices[v];
             auto j = vertices[(v+1)%nf];
-            Spline S = splineMaker.makeNormalSpline(
-                        toVec3(this->myEmbedder(f,i)),
-                        toVec3(this->myVertexNormalEmbedder(i)),
-                        toVec3(this->myEmbedder(f,j)),
-                        toVec3(this->myVertexNormalEmbedder(j))
-                        );
+            Spline S;
+            if (false){
+                Vector3 ni = toVec3(this->myVertexNormalEmbedder(i));
+                Vector3 nj = toVec3(this->myVertexNormalEmbedder(j));
+                S = splineMaker.makeNormalSpline(xi,ni,xj,nj);
+            }
+            else {
+                Vector3 e = xj-xi;
+                S = splineMaker.makeTangentSpline(xi,
+                                                 this->projectOnVertexTangentPlane(e,i),
+                                                  xj,
+                                                 this->projectOnVertexTangentPlane(e,j));
+            }
             midpoints.block(v,0,1,3) = S(0.5).transpose();
             //midpoints.block(v,0,1,3) = S.getMidPoint().transpose();
         }
         return midpoints;
     }
 
-    Vector projectOnVertexTangentPlane(const Vector& e,Vertex v){
-        DenseMatrix T = this->Tv(v);
-        return (T*T.transpose()*e).col(0);
-    }
 }; // end of class SplineCorrectedPolygonalCalculus
 
 /**
