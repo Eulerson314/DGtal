@@ -215,23 +215,30 @@ struct Spline{
             Xp(i) = X(i);
         return Xp;
     }
-    Vector getMidPoint() const {
+    Vector averagePoint() const {
         return coeffs*midpointForm;
     }
 };
 
 struct SplineMaker {
 
-    Eigen::ColPivHouseholderQR<Eigen::Matrix4d> solver;
+    Eigen::ColPivHouseholderQR<Eigen::Matrix4d> normal_solver;
+    Eigen::ColPivHouseholderQR<Eigen::Matrix4d> tangent_solver;
     SplineMaker(){
-        Eigen::Matrix4d A = Eigen::Matrix4d::Zero(4,4);
-        A(0,0) = 1;
-        A.block<1,4>(1,0) = Eigen::MatrixXd::Ones(1,4);
-        A(2,2) = 2;
-        A(3,2) = 2; A(3,3) = 6;
-        solver.compute(A);
+        Eigen::Matrix4d N;
+        N << 1,0,0,0,
+             1,1,1,1,
+             0,0,2,0,
+             0,0,2,6;
+        normal_solver.compute(N);
+        Eigen::Matrix4d T;
+        T << 1,0,0,0,
+             1,1,1,1,
+             0,1,0,0,
+             0,1,2,3;
+        tangent_solver.compute(T);
     }
-    Spline makeSpline(
+    Spline makeNormalSpline(
             const Vector& x1,
             const Vector& n1,
             const Vector& x2,
@@ -244,7 +251,23 @@ struct SplineMaker {
             B(2,i) = -n1(i);
             B(3,i) = -n2(i);
         }
-        S.coeffs = solver.solve(B).transpose();
+        S.coeffs = normal_solver.solve(B).transpose();
+        return S;
+    }
+    Spline makeTangentSpline(
+            const Vector& x1,
+            const Vector& t1,
+            const Vector& x2,
+            const Vector& t2) const{
+        Spline S;
+        DenseMatrix B(4,3);
+        for (int i =0;i<3;i++){
+            B(0,i) = x1(i);
+            B(1,i) = x2(i);
+            B(2,i) = t1(i);
+            B(3,i) = t2(i);
+        }
+        S.coeffs = tangent_solver.solve(B).transpose();
         return S;
     }
 };
@@ -277,7 +300,7 @@ public:
             auto j = vertices[(v+1)%nf];
             Vector3 xj = toVec3(this->myEmbedder(f,j));
             auto nj = toVec3(this->myVertexNormalEmbedder(j));
-            Spline S = splineMaker.makeSpline(
+            Spline S = splineMaker.makeNormalSpline(
                         xi,
                         ni,
                         xj,
@@ -305,7 +328,7 @@ public:
         for (auto v = 0u;v<nf;v++){
             auto i = vertices[v];
             auto j = vertices[(v+1)%nf];
-            Spline S = splineMaker.makeSpline(
+            Spline S = splineMaker.makeNormalSpline(
                         toVec3(this->myEmbedder(f,i)),
                         toVec3(this->myVertexNormalEmbedder(i)),
                         toVec3(this->myEmbedder(f,j)),
@@ -328,7 +351,7 @@ public:
         for (auto v = 0u;v<nf;v++){
             auto i = vertices[v];
             auto j = vertices[(v+1)%nf];
-            Spline S = splineMaker.makeSpline(
+            Spline S = splineMaker.makeNormalSpline(
                         toVec3(this->myEmbedder(f,i)),
                         toVec3(this->myVertexNormalEmbedder(i)),
                         toVec3(this->myEmbedder(f,j)),
@@ -338,6 +361,11 @@ public:
             //midpoints.block(v,0,1,3) = S.getMidPoint().transpose();
         }
         return midpoints;
+    }
+
+    Vector projectOnVertexTangentPlane(const Vector& e,Vertex v){
+        DenseMatrix T = this->T_v(v);
+        return (T*T.transpose()*e).col(0);
     }
 }; // end of class SplineCorrectedPolygonalCalculus
 
