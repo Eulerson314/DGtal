@@ -289,7 +289,7 @@ public:
         return (T*T.transpose()*e).col(0);
     }
 
-    bool normalSplines = true;
+    bool normalSplines = false;
 
     Spline makeSpline(Face f,Vertex i,Vertex j) const {
             Vector3 xi = toVec3(this->myEmbedder(f,i));
@@ -302,10 +302,12 @@ public:
             }
             else {
                 Vector3 e = xj-xi;
+                Vector eti = projectOnVertexTangentPlane(e,i).normalized()*e.norm();
+                Vector etj = projectOnVertexTangentPlane(e,j).normalized()*e.norm();
                 S = splineMaker.makeTangentSpline(xi,
-                                                 this->projectOnVertexTangentPlane(e,i),
+                                                 eti,
                                                   xj,
-                                                 this->projectOnVertexTangentPlane(e,j));
+                                                 etj);
             }
             return S;
     }
@@ -368,8 +370,8 @@ public:
             auto i = vertices[v];
             auto j = vertices[(v+1)%nf];
             Spline S = makeSpline(f,i,j);
-            midpoints.block(v,0,1,3) = S(0.5).transpose();
-            //midpoints.block(v,0,1,3) = S.getMidPoint().transpose();
+            //midpoints.block(v,0,1,3) = S(0.5).transpose();
+            midpoints.block(v,0,1,3) = S.getMidPoint().transpose();
         }
         return midpoints;
     }
