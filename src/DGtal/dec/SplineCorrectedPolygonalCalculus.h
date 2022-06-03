@@ -364,7 +364,7 @@ public:
     }
 
     Vector projectOnVertexTangentPlane(const Vector& e,Vertex v){
-        DenseMatrix T = this->T_v(v);
+        DenseMatrix T = this->Tv(v);
         return (T*T.transpose()*e).col(0);
     }
 }; // end of class SplineCorrectedPolygonalCalculus
