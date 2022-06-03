@@ -302,8 +302,8 @@ public:
             }
             else {
                 Vector3 e = xj-xi;
-                Vector eti = projectOnVertexTangentPlane(e,i).normalized()*e.norm();
-                Vector etj = projectOnVertexTangentPlane(e,j).normalized()*e.norm();
+                Vector eti = projectOnVertexTangentPlane(e,i);//.normalized()*e.norm();
+                Vector etj = projectOnVertexTangentPlane(e,j);//.normalized()*e.norm();
                 S = splineMaker.makeTangentSpline(xi,
                                                  eti,
                                                   xj,
