@@ -163,7 +163,7 @@ struct Spline{
     Vector midpointForm;
 
     Spline() {
-        midpointForm = Vector();
+        midpointForm = Vector::Zero(4);
         midpointForm(1) = 0.5;
         midpointForm(2) = 1./3.;
         midpointForm(3) = 0.25;
