@@ -371,7 +371,7 @@ public:
             auto j = vertices[(v+1)%nf];
             Spline S = makeSpline(f,i,j);
             //midpoints.block(v,0,1,3) = S(0.5).transpose();
-            midpoints.block(v,0,1,3) = S.getMidPoint().transpose();
+            midpoints.block(v,0,1,3) = S.averagePoint().transpose();
         }
         return midpoints;
     }
