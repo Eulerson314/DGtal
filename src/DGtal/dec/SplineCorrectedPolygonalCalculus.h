@@ -334,8 +334,8 @@ public:
                         toVec3(this->myEmbedder(f,j)),
                         toVec3(this->myVertexNormalEmbedder(j))
                         );
-            //midpoints.block(v,0,1,3) = S(0.5).transpose();
-            midpoints.block(v,0,1,3) = S.getMidPoint().transpose();
+            midpoints.block(v,0,1,3) = S(0.5).transpose();
+            //midpoints.block(v,0,1,3) = S.getMidPoint().transpose();
         }
         return midpoints;
     }
