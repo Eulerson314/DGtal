@@ -379,7 +379,7 @@ public:
 
     Vector centroid(const Face f) const override
     {
-        auto nf = myFaceDegree[f];
+        auto nf = this->myFaceDegree[f];
         return 1.0/(double)nf * B(f).transpose() * Vector::Ones(nf);
     }
 
