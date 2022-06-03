@@ -209,7 +209,6 @@ public:
    * @param other the object to move.
    * @return a reference on 'this'.
    */
-<<<<<<< HEAD
     PolygonalCalculus & operator= ( PolygonalCalculus && other ) = delete;
 
   /// @}
@@ -422,7 +421,7 @@ public:
 
     /// @returns the centroid of the face
     /// @param f the face
-    Vector centroid(const Face f) const
+    virtual Vector centroid(const Face f) const
     {
         auto nf = myFaceDegree[f];
         return 1.0/(double)nf * X(f).transpose() * Vector::Ones(nf);

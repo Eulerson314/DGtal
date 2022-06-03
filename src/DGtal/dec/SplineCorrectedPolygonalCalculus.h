@@ -361,6 +361,7 @@ public:
         return CGS;
     }
 
+
     DenseMatrix B(const Face f) const override
     {
         auto vertices = this->mySurfaceMesh->incidentVertices(f);
@@ -374,6 +375,12 @@ public:
             midpoints.block(v,0,1,3) = S.averagePoint().transpose();
         }
         return midpoints;
+    }
+
+    Vector centroid(const Face f) const override
+    {
+        auto nf = myFaceDegree[f];
+        return 1.0/(double)nf * B(f).transpose() * Vector::Ones(nf);
     }
 
 }; // end of class SplineCorrectedPolygonalCalculus
