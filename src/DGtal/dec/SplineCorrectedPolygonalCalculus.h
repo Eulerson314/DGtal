@@ -160,6 +160,15 @@ struct Spline{
     static constexpr int DEGREE = 3;
     DenseMatrix coeffs;
 
+    Vector midpointForm;
+
+    Spline() {
+        midpointForm = Vector();
+        midpointForm(1) = 0.5;
+        midpointForm(2) = 1./3.;
+        midpointForm(3) = 0.25;
+    }
+
     Vector eval(double t) const {
         Vector T = Vector::Zero(4);
         double x = 1;
@@ -205,6 +214,9 @@ struct Spline{
         for (int i = 0;i<3;i++)
             Xp(i) = X(i);
         return Xp;
+    }
+    Vector getMidPoint() const {
+        return coeffs*midpointForm;
     }
 };
 
@@ -322,7 +334,8 @@ public:
                         toVec3(this->myEmbedder(f,j)),
                         toVec3(this->myVertexNormalEmbedder(j))
                         );
-            midpoints.block(v,0,1,3) = S(0.5).transpose();
+            //midpoints.block(v,0,1,3) = S(0.5).transpose();
+            midpoints.block(v,0,1,3) = S.getMidPoint();
         }
         return midpoints;
     }
