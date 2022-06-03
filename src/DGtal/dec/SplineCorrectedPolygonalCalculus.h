@@ -289,11 +289,13 @@ public:
         return (T*T.transpose()*e).col(0);
     }
 
+    bool normalSplines = true;
+
     Spline makeSpline(Face f,Vertex i,Vertex j) const {
             Vector3 xi = toVec3(this->myEmbedder(f,i));
             Vector3 xj = toVec3(this->myEmbedder(f,j));
             Spline S;
-            if (false){
+            if (normalSplines){
                 Vector3 ni = toVec3(this->myVertexNormalEmbedder(i));
                 Vector3 nj = toVec3(this->myVertexNormalEmbedder(j));
                 S = splineMaker.makeNormalSpline(xi,ni,xj,nj);
