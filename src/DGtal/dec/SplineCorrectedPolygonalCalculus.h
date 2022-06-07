@@ -156,6 +156,7 @@ public:
 
     // ----------------------- Inner Spline Classes --------------------------------------
 public:
+    /*
 struct Spline{
     static constexpr int DEGREE = 3;
     DenseMatrix coeffs;
@@ -220,6 +221,7 @@ struct Spline{
     }
 };
 
+
 struct SplineMaker {
 
     Eigen::ColPivHouseholderQR<Eigen::Matrix4d> normal_solver;
@@ -273,6 +275,58 @@ struct SplineMaker {
 };
 
     SplineMaker splineMaker;
+*/
+    struct Spline{
+        DenseMatrix coeff;
+        Spline2() {}
+        Spline2(const Vector& x1,const Vector& n1,const Vector& x2,const Vector& n2){
+            DenseMatrix A = DenseMatrix::Zero(8,9);
+            for (int i = 0;i<3;i++){
+                A(i,3*i+2) = 1;
+                for (int j = 0;j<3;j++)
+                    A(3+i,3*i+j) = 1;
+            }
+            for (int i = 0;i<3;i++){
+                A(6,3*i+1) = n1(i);
+                A(7,3*i) = 2*n2(i);
+                A(7,3*i+1) = n2(i);
+            }
+            Vector b(8);
+            b.block(0,0,3,1) = x1;
+            b.block(3,0,3,1) = x2;
+            b(6) = 0;
+            b(7) = 0;
+            Vector K = A.fullPivLu().kernel().col(0);
+            Vector sol_p = A.completeOrthogonalDecomposition().solve(b);
+            DenseMatrix E = DenseMatrix::Zero(9,9);
+            for (int i = 0;i<3;i++)
+                E(3*i,3*i) = 1.;
+            double argmin = -(K.dot(E*sol_p))/(K.dot(E*K));
+            //Vector sol = sol_p + K;
+            //std::cout << "E1= " << sol.dot(E*sol) << std::endl;
+            Vector sol = sol_p + argmin*K;
+            //std::cout << "E2= " << sol.dot(E*sol) << std::endl;
+            coeff = DenseMatrix(3,3);
+            for ( int i = 0;i<3;i++)
+                coeff.block(i,0,1,3) = sol.block(3*i,0,3,1).transpose();
+        }
+        Vector3 operator()(double t) const {
+            Vector3 T;
+            T << t*t, t, 1;
+            return coeff*T;
+        }
+
+        Vector evalTangent(double t) const {
+            Vector3 T;
+            T << 2*t, 1, 0;
+            return coeff*T;
+        }
+        Vector evalNormal(double t) const {
+            Vector3 T;
+            T << 2, 0, 0;
+            return coeff*T;
+        }
+    };
 
 public:
     // ---------------------- Redefined Operators ---------------------------
@@ -298,9 +352,10 @@ public:
             if (normalSplines){
                 Vector3 ni = toVec3(this->myVertexNormalEmbedder(i));
                 Vector3 nj = toVec3(this->myVertexNormalEmbedder(j));
-                S = splineMaker.makeNormalSpline(xi,ni,xj,nj);
+                //S = splineMaker.makeNormalSpline(xi,ni,xj,nj);
             }
             else {
+                /*
                 Vector3 e = xj-xi;
                 Vector eti = projectOnVertexTangentPlane(e,i);//.normalized()*e.norm();
                 Vector etj = projectOnVertexTangentPlane(e,j);//.normalized()*e.norm();
@@ -308,6 +363,10 @@ public:
                                                  eti,
                                                   xj,
                                                  etj);
+                                                 */
+                Vector3 ni = toVec3(this->myVertexNormalEmbedder(i));
+                Vector3 nj = toVec3(this->myVertexNormalEmbedder(j));
+                S = Spline(xi,ni,xj,nj);
             }
             return S;
     }
