@@ -326,6 +326,11 @@ struct SplineMaker {
             T << 2, 0, 0;
             return coeff*T;
         }
+        Vector averagePoint() const {
+            Vector3 T;
+            T << 1./3., 0.5, 0;
+            return coeff*T;
+        }
     };
 
 public:
