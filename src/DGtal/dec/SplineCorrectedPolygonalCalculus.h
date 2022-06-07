@@ -278,8 +278,8 @@ struct SplineMaker {
 */
     struct Spline{
         DenseMatrix coeff;
-        Spline2() {}
-        Spline2(const Vector& x1,const Vector& n1,const Vector& x2,const Vector& n2){
+        Spline() {}
+        Spline(const Vector& x1,const Vector& n1,const Vector& x2,const Vector& n2){
             DenseMatrix A = DenseMatrix::Zero(8,9);
             for (int i = 0;i<3;i++){
                 A(i,3*i+2) = 1;
