@@ -304,7 +304,7 @@ struct SplineMaker {
             double argmin = -(K.dot(E*sol_p))/(K.dot(E*K));
             //Vector sol = sol_p + K;
             //std::cout << "E1= " << sol.dot(E*sol) << std::endl;
-            Vector sol = sol_p + argmin*K;
+            Vector sol = sol_p;// + argmin*K;
             //std::cout << "E2= " << sol.dot(E*sol) << std::endl;
             coeff = DenseMatrix(3,3);
             for ( int i = 0;i<3;i++)
