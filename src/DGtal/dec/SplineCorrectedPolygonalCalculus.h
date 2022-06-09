@@ -100,6 +100,7 @@ public:
     typedef LinAlg::SolverSimplicialLDLT Solver;
 
     typedef Eigen::Vector3d Vector3;
+    typedef Eigen::Matrix3d Matrix3;
 
     SplineCorrectedPolygonalCalculus(
               const ConstAlias<MySurfaceMesh> surf,
@@ -277,8 +278,9 @@ struct SplineMaker {
     SplineMaker splineMaker;
 */
     struct Spline{
-        DenseMatrix coeff;
+        Matrix3 coeff;
         Spline() {}
+        /*
         Spline(const Vector& x1,const Vector& n1,const Vector& x2,const Vector& n2){
             DenseMatrix A = DenseMatrix::Zero(8,9);
             for (int i = 0;i<3;i++){
@@ -310,23 +312,49 @@ struct SplineMaker {
             for ( int i = 0;i<3;i++)
                 coeff.block(i,0,1,3) = sol.block(3*i,0,3,1).transpose();
         }
+        */
+
+    static Matrix3 getProjector(const Vector3& a,const Vector3& b){
+        Eigen::Matrix<double,3,2> T;
+        T.col(0) = a;T.col(1) = b;
+        return T*(T.transpose()*T).fullPivHouseholderQr().solve(T.transpose());
+    }
+
+    Spline(const Vector& x1,const Vector& N1,const Vector& x2,const Vector& N2){
+        coeff = Matrix3::Zero();
+        static Vector3 axis = Vector3(1.35514,.5464,2.646857468);
+        Vector3 e = (x2-x1).head(3);
+        Vector3 aN = (N1+N2).head(3);
+        Matrix3 P = getProjector(aN,e);
+        Vector3 n1 = (P*N1).head(3).normalized();
+        Vector3 n2 = (P*N2).head(3).normalized();
+        Vector3 e1 = axis.cross(e).normalized();
+        Vector3 e2 = e1.cross(e).normalized();
+        Matrix2 A; A << n1.dot(e1), n1.dot(e2),n2.dot(e1),n2.dot(e2);
+        Vector2 b; b << -n1.dot(e),n2.dot(e);
+        Vector2 c = A.fullPivHouseholderQr().solve(b);
+        coeff.col(0) = -(c(0)*e1 + c(1)*e2);
+        coeff.col(1) = e + c(0)*e1 + c(1)*e2;
+        coeff.col(2) = x1;
+    }
+
         Vector3 operator()(double t) const {
             Vector3 T;
             T << t*t, t, 1;
             return coeff*T;
         }
 
-        Vector evalTangent(double t) const {
+        Vector3 evalTangent(double t) const {
             Vector3 T;
             T << 2*t, 1, 0;
             return coeff*T;
         }
-        Vector evalNormal(double t) const {
+        Vector3 evalNormal(double t) const {
             Vector3 T;
             T << 2, 0, 0;
             return coeff*T;
         }
-        Vector averagePoint() const {
+        Vector3 averagePoint() const {
             Vector3 T;
             T << 1./3., 0.5, 1;
             return coeff*T;
@@ -391,11 +419,11 @@ public:
             auto j = vertices[(v+1)%nf];
             Vector3 xj = toVec3(this->myEmbedder(f,j));
             Spline S = makeSpline(f,i,j);
-            Vector3 T0 = toVec3(S.evalTangent(0));
-            Vector3 T1 = toVec3(S.evalTangent(1));
-            Vector3 TH = toVec3(S.evalTangent(0.5));
-            Vector3 N0 = toVec3(S.evalNormal(0));
-            Vector3 N1 = toVec3(S.evalNormal(1));
+            Vector3 T0 = S.evalTangent(0);
+            Vector3 T1 = S.evalTangent(1);
+            Vector3 TH = S.evalTangent(0.5);
+            Vector3 N0 = S.evalNormal(0);
+            Vector3 N1 = S.evalNormal(1);
             af += lambda*(
                         14*(xi.cross(T0) + xj.cross(T1))
                         +32*toVec3(S(0.5)).cross(TH)
