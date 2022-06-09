@@ -136,8 +136,8 @@ public:
 
         SparseMatrix mass      = myCalculus->globalLumpedMassMatrix();
         SparseMatrix mass2      = myCalculus->doubledGlobalLumpedMassMatrix();
-        SparseMatrix scalarHeatOpe   =  mass + dt*laplacian;
-        SparseMatrix vectorHeatOpe   =  mass2 + dt*connectionLaplacian;
+        SparseMatrix scalarHeatOpe   =  mass - dt*laplacian;
+        SparseMatrix vectorHeatOpe   =  mass2 - dt*connectionLaplacian;
 
         //Prefactorizing
         myScalarHeatSolver.compute(scalarHeatOpe);

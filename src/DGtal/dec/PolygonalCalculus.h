@@ -696,7 +696,7 @@ public:
     DenseMatrix CovL(const Face &f, double lambda = 1.0) const {
         auto G = EnergyCovG_f(f);
         auto P = EnergyCovP_f(f);
-        return faceArea(f) * G.transpose() * G + lambda * P.transpose() * P;
+        return -(faceArea(f) * G.transpose() * G + lambda * P.transpose() * P);
     }
     // ----------------------- Global operators --------------------------------------
 
@@ -793,52 +793,31 @@ public:
     ///
     /// @param lambda the regualrization parameter for the local Connection-Laplace-Beltrami operators
     /// @return a sparse 2*nbVertices x 2*nbVertices matrix
-    SparseMatrix globalConnectionLaplace(const double lambda=1.0,const bool nullIfBoundary = false) const
+    SparseMatrix globalConnectionLaplace(const double lambda=1.0) const
     {
         auto nv = mySurfaceMesh->nbVertices();
         SparseMatrix lapGlobal(2*nv, 2*nv);
         SparseMatrix local(2*nv, 2*nv);
         std::vector<Triplet> triplets;
-        std::vector<size_t> reorder;
-        std::vector<bool> isBoundary(nv,false);
-        if (nullIfBoundary){
-            for (auto e : mySurfaceMesh->computeManifoldBoundaryEdges()){
-                auto ij = mySurfaceMesh->edgeVertices(e);
-                isBoundary[ij.first] = true;
-                isBoundary[ij.second] = true;
-            }
-        }
         for(auto f = 0;f<mySurfaceMesh->nbFaces();f++)
         {
             auto nf  = degree(f);
-            reorder.resize(nf);
             DenseMatrix Lap = CovL(f,lambda);
-            auto cpt=0;
-            for(auto v : mySurfaceMesh->incidentVertices(f))
-            {
-                reorder[ cpt ]= v;
-                ++cpt;
-            }
+            const auto vertices = mySurfaceMesh->incidentVertices(f);
             for(auto i=0u; i < nf; ++i)
                 for(auto j=0u; j < nf; ++j)
                 {
-                    if (!nullIfBoundary || !(isBoundary[reorder[i]] && isBoundary[reorder[j]]) ){
                         for (short k1 = 0;k1<2;k1++){
                             for (short k2 = 0;k2<2;k2++){
                                 auto v = Lap(2*i+k1,2*j+k2);
                                 if (v!= 0.0){
-                                    triplets.emplace_back(Triplet(2*reorder[i]+k1,2*reorder[j]+k2,v));
+                                    triplets.emplace_back(Triplet(2*vertices[i]+k1,2*vertices[j]+k2,v));
                                 }
                             }
                         }
-                        local.setFromTriplets(triplets.begin(), triplets.end());
-                        lapGlobal += local;
-
-                        triplets.clear();
-                        local.setZero();
-                    }
                 }
         }
+        lapGlobal.setFromTriplets(triplets.begin(),triplets.end());
         return lapGlobal;
     }
 
