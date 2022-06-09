@@ -101,6 +101,8 @@ public:
 
     typedef Eigen::Vector3d Vector3;
     typedef Eigen::Matrix3d Matrix3;
+    typedef Eigen::Vector2d Vector2;
+    typedef Eigen::Matrix2d Matrix2;
 
     SplineCorrectedPolygonalCalculus(
               const ConstAlias<MySurfaceMesh> surf,
