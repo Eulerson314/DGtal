@@ -122,6 +122,10 @@ public:
         myVertexNormalEmbedder =[&](Vertex v){
             return computeVertexNormal(v);
         };
+
+        myFaceNormalEmbedder =[&](Face f){
+            return vectorArea(f).normalize();
+        };
         init();
     };
 
@@ -139,6 +143,9 @@ public:
         myVertexNormalEmbedder =[&](Vertex v){
             return computeVertexNormal(v);
         };
+        myFaceNormalEmbedder =[&](Face f){
+            return vectorArea(f).normalize();
+        };
         init();
     };
 
@@ -154,6 +161,9 @@ public:
         mySurfaceMesh(&surf), myVertexNormalEmbedder(embedder), myGlobalCacheEnabled(globalInternalCacheEnabled)
     {
         myEmbedder =[&](Face f,Vertex v){ return mySurfaceMesh->position(v);};
+        myFaceNormalEmbedder =[&](Face f){
+            return vectorArea(f).normalize();
+        };
         init();
     };
 
@@ -172,6 +182,9 @@ public:
               bool globalInternalCacheEnabled = false):
         mySurfaceMesh(&surf), myEmbedder(pos_embedder), myVertexNormalEmbedder(normal_embedder), myGlobalCacheEnabled(globalInternalCacheEnabled)
     {
+        myFaceNormalEmbedder =[&](Face f){
+            return vectorArea(f).normalize();
+        };
         init();
     };
 
@@ -222,6 +235,13 @@ public:
   void setEmbedder(const std::function<Real3dPoint(Face,Vertex)> &externalFunctor)
   {
     myEmbedder = externalFunctor;
+  }
+
+  /// Update the embedding function.
+  /// @param externalFunctor a new embedding functor (Face,Vertex)->RealPoint.
+  void setFaceNormalEmbedder(const std::function<Vector(Face)> &externalFunctor)
+  {
+    myFaceNormalEmbedder = externalFunctor;
   }
 
     // ----------------------- Per face operators --------------------------------------
@@ -343,9 +363,12 @@ public:
     /// @return a vector (Eigen vector)
     Vector faceNormal(const Face f) const
     {
+        return myFaceNormalEmbedder(f);
+        /*
         Vector v = vectorArea(f);
         v.normalize();
         return v;
+        */
     }
 
     /// Corrected normal vector of a face.
@@ -1056,6 +1079,9 @@ protected:
 
     ///Embedding function (vertex)->R^3 for the vertex normal.
     std::function<Vector(Vertex)> myVertexNormalEmbedder;
+
+    ///Embedding function (vertex)->R^3 for the vertex normal.
+    std::function<Vector(Face)> myFaceNormalEmbedder;
 
     ///Cache containing the face degree
     std::vector<size_t> myFaceDegree;
