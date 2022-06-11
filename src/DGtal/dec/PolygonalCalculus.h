@@ -124,7 +124,7 @@ public:
         };
 
         myFaceNormalEmbedder =[&](Face f){
-            return vectorArea(f).normalize();
+            return vectorArea(f).normalized();
         };
         init();
     };
@@ -144,7 +144,7 @@ public:
             return computeVertexNormal(v);
         };
         myFaceNormalEmbedder =[&](Face f){
-            return vectorArea(f).normalize();
+            return vectorArea(f).normalized();
         };
         init();
     };
@@ -162,7 +162,7 @@ public:
     {
         myEmbedder =[&](Face f,Vertex v){ return mySurfaceMesh->position(v);};
         myFaceNormalEmbedder =[&](Face f){
-            return vectorArea(f).normalize();
+            return vectorArea(f).normalized();
         };
         init();
     };
@@ -183,7 +183,7 @@ public:
         mySurfaceMesh(&surf), myEmbedder(pos_embedder), myVertexNormalEmbedder(normal_embedder), myGlobalCacheEnabled(globalInternalCacheEnabled)
     {
         myFaceNormalEmbedder =[&](Face f){
-            return vectorArea(f).normalize();
+            return vectorArea(f).normalized();
         };
         init();
     };
