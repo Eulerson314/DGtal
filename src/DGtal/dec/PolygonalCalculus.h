@@ -107,8 +107,8 @@ public:
     ///Type of a sparse matrix solver
     typedef LinAlg::SolverSimplicialLDLT Solver;
 
-  /// @name Standard services
-  /// @{
+    /// @name Standard services
+    /// @{
 
     /// Create a Polygonal DEC structure from a surface mesh (@a surf)
     /// using an default identity embedder.
@@ -212,20 +212,24 @@ public:
    */
     PolygonalCalculus & operator= ( PolygonalCalculus && other ) = delete;
 
-  /// @}
+    /// @}
 
-  // ----------------------- embedding  services  --------------------------
-  /// @name Embedding services
-  /// @{
+    // ----------------------- embedding  services  --------------------------
+    /// @name Embedding services
+    /// @{
 
-  /// Update the embedding function.
-  /// @param externalFunctor a new embedding functor (Face,Vertex)->RealPoint.
-  void setEmbedder(const std::function<Real3dPoint(Face,Vertex)> &externalFunctor)
-  {
-    myEmbedder = externalFunctor;
-  }
+    /// Update the embedding function.
+    /// @param externalFunctor a new embedding functor (Face,Vertex)->RealPoint.
+    void setEmbedder(const std::function<Real3dPoint(Face,Vertex)> &externalFunctor)
+    {
+        myEmbedder = externalFunctor;
+    }
+    /// @}
 
     // ----------------------- Per face operators --------------------------------------
+
+    /// @name Per face operators
+    /// @{
 
     /// Return the vertex position matrix degree x 3 of the face.
     /// @param f a face
@@ -376,7 +380,7 @@ public:
     {
         DenseMatrix brack(3,3);
         brack << 0.0 , -n(2), n(1),
-                 n(2), 0.0 , -n(0),
+                n(2), 0.0 , -n(0),
                 -n(1) , n(0),0.0 ;
         return brack;
     }
@@ -484,31 +488,31 @@ public:
         return op;
     }
 
-  /// Divergence operator of a one-form.
-  /// @param f the face
-  /// @param lambda the regularization parameter
-  /// @return a degree x degree matrix
-  ///
-  /// @note The sign convention for the divergence and the Laplacian
-  /// operator is opposite to the one of @cite degoes2020discrete .
-  /// This is to match the usual mathematical
-  /// convention that the Laplacian (and the Laplacian-Beltrami) has
-  /// negative eigenvalues (and is the sum of second derivatives in
-  /// the cartesian grid). It also follows the formal adjointness of
-  /// exterior derivative and opposite of divergence as relation \f$
-  /// \langle \mathrm{d} u, v \rangle = - \langle u, \mathrm{div} v
-  /// \rangle \f$. See also
-  /// https://en.wikipedia.org/wiki/Laplace–Beltrami_operator
-  DenseMatrix divergence(const Face f, const double lambda=1.0) const
-  {
-    if (checkCache(DIVERGENCE_,f))
-      return myGlobalCache[DIVERGENCE_][f];
+    /// Divergence operator of a one-form.
+    /// @param f the face
+    /// @param lambda the regularization parameter
+    /// @return a degree x degree matrix
+    ///
+    /// @note The sign convention for the divergence and the Laplacian
+    /// operator is opposite to the one of @cite degoes2020discrete .
+    /// This is to match the usual mathematical
+    /// convention that the Laplacian (and the Laplacian-Beltrami) has
+    /// negative eigenvalues (and is the sum of second derivatives in
+    /// the cartesian grid). It also follows the formal adjointness of
+    /// exterior derivative and opposite of divergence as relation \f$
+    /// \langle \mathrm{d} u, v \rangle = - \langle u, \mathrm{div} v
+    /// \rangle \f$. See also
+    /// https://en.wikipedia.org/wiki/Laplace–Beltrami_operator
+    DenseMatrix divergence(const Face f, const double lambda=1.0) const
+    {
+        if (checkCache(DIVERGENCE_,f))
+            return myGlobalCache[DIVERGENCE_][f];
 
-    DenseMatrix op = -1.0 * D(f).transpose() * M(f);
-    setInCache(DIVERGENCE_,f,op);
+        DenseMatrix op = -1.0 * D(f).transpose() * M(f);
+        setInCache(DIVERGENCE_,f,op);
 
-    return op;
-  }
+        return op;
+    }
 
     /// Curl operator of a one-form (identity matrix).
     /// @param f the face
@@ -525,36 +529,34 @@ public:
     }
 
 
-  /// (weak) Laplace-Beltrami operator for the face.
-  /// @param f the face
-  /// @param lambda the regularization parameter
-  /// @return a degree x degree matrix
-  ///
-  /// @note The sign convention for the divergence and the Laplacian
-  /// operator is opposite to the one of @cite degoes2020discrete .
-  /// This is to match the usual mathematical
-  /// convention that the Laplacian (and the Laplacian-Beltrami) has
-  /// negative eigenvalues (and is the sum of second derivatives in
-  /// the cartesian grid). It also follows the formal adjointness of
-  /// exterior derivative and opposite of divergence as relation \f$
-  /// \langle \mathrm{d} u, v \rangle = - \langle u, \mathrm{div} v
-  /// \rangle \f$. See also https://en.wikipedia.org/wiki/Laplace–Beltrami_operator
-  DenseMatrix LaplaceBeltrami(const Face f, const double lambda=1.0) const
-  {
-    if (checkCache(L_,f))
-      return myGlobalCache[L_][f];
+    /// (weak) Laplace-Beltrami operator for the face.
+    /// @param f the face
+    /// @param lambda the regularization parameter
+    /// @return a degree x degree matrix
+    ///
+    /// @note The sign convention for the divergence and the Laplacian
+    /// operator is opposite to the one of @cite degoes2020discrete .
+    /// This is to match the usual mathematical
+    /// convention that the Laplacian (and the Laplacian-Beltrami) has
+    /// negative eigenvalues (and is the sum of second derivatives in
+    /// the cartesian grid). It also follows the formal adjointness of
+    /// exterior derivative and opposite of divergence as relation \f$
+    /// \langle \mathrm{d} u, v \rangle = - \langle u, \mathrm{div} v
+    /// \rangle \f$. See also https://en.wikipedia.org/wiki/Laplace–Beltrami_operator
+    DenseMatrix LaplaceBeltrami(const Face f, const double lambda=1.0) const
+    {
+        if (checkCache(L_,f))
+            return myGlobalCache[L_][f];
 
-    DenseMatrix Df = D(f);
-    // Laplacian is a negative operator.
-    DenseMatrix op = -1.0 * Df.transpose() * M(f,lambda) * Df;
+        DenseMatrix Df = D(f);
+        // Laplacian is a negative operator.
+        DenseMatrix op = -1.0 * Df.transpose() * M(f,lambda) * Df;
 
-    setInCache(L_, f, op);
-    return op;
-  }
+        setInCache(L_, f, op);
+        return op;
+    }
 
-  /// @}
     // ----------------------- Vector calculus -----------------------------------
-
     static Vector proj(const Vector &u, const Vector &n) {
         return u - (u.dot(n) / n.squaredNorm()) * n;
     }
@@ -570,6 +572,9 @@ public:
         return Eigen::Vector3d(x(0),x(1),x(2));
     }
 
+    /// \param v the vertex to compute the normal from
+    /// \return 3D normal vector at vertex v
+    ///
     Vector computeVertexNormal(const Vertex &v) const {
         Vector n(3);
         n(0) = 0.;n(1) = 0.;n(2) = 0.;
@@ -578,11 +583,12 @@ public:
         return n.normalized();
     }
 
+    ///@return the normal vector at vertex v, if no normal vertex embedder is set, the normal will be computed
     Eigen::Vector3d n_v(const Vertex &v) const {
         return myVertexNormalEmbedder(v);
     }
 
-    // 3x2 matrix defining the tangent space at v
+    ///@return 3x2 matrix defining the tangent space at vertex v, with basis vectors in columns
     DenseMatrix Tv(const Vertex &v) const {
         Eigen::Vector3d nv = n_v(v);
         assert(std::abs(nv.norm() - 1.0) < 0.001);
@@ -600,7 +606,7 @@ public:
         return tanB;
     }
 
-    // 3x2 matrix defining the tangent space at f
+    ///@return 3x2 matrix defining the tangent space at face f, with basis vectors in columns
     DenseMatrix Tf(const Face &f) const {
         Eigen::Vector3d nf = faceNormal(f);
         assert(std::abs(nf.norm() - 1.0) < 0.001);
@@ -619,11 +625,14 @@ public:
         return tanB;
     }
 
+    ///@return 3D extrinsic vector from intrinsic 2D vector I expressed from tangent frame at vertex v
     Vector toExtrinsicVector(const Vertex v,const Vector& I) const{
         DenseMatrix T = Tv(v);
         return T.col(0)*I(0) + T.col(1)*I(1);
     }
 
+    /// \param I, set of intrinsic vector, vector indices must be the same as their associated vertex
+    ///@return converts a set of intrinsic vectors to their extrinsic equivalent, expressed in correponding tangent frame
     std::vector<Vector> toExtrinsicVectors(const std::vector<Vector>& I) const{
         std::vector<Vector> ext(mySurfaceMesh->nbVertices());
         for (auto v=0;v<mySurfaceMesh->nbVertices();v++)
@@ -631,8 +640,8 @@ public:
         return ext;
     }
 
-    // Rotation matrix to align n_v to n_f
-    // https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
+    /// https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
+    ///@return 3x3 Rotation matrix to align n_v to n_f
     DenseMatrix Qvf(const Vertex &v, const Face &f) const {
         Eigen::Vector3d nf = faceNormal(f);
         Eigen::Vector3d nv = n_v(v);
@@ -643,13 +652,27 @@ public:
         return Eigen::Matrix3d::Identity() + skew + 1.0 / (1.0 + c) * skew * skew;
     }
 
-    // Levi-Citiva connection from vertex v to face f
+    ///@return Levi-Citiva connection from vertex v tangent space to face f tangent space (2x2 rotation matrix)
     DenseMatrix Rvf(const Vertex &v, const Face &f) const {
         return Tf(f).transpose() * Qvf(v, f) * Tv(v);
     }
 
-    // returns Block Diagonal matrix with Rvf for each vertex v in face f
-    // to the face f
+
+    ///@return Shape Operator at face f
+    DenseMatrix shape(const Face f){
+        DenseMatrix N(myFaceDegree[f],3);
+        uint cpt = 0;
+        for (Vertex v : mySurfaceMesh->incidentVertices(f)){
+            N.block(cpt,0,3,1) = n_v(v).transpose();
+            cpt++;
+        }
+        DenseMatrix GN = gradient(f)*N,Tf = T_f(f);
+
+        return 0.5*Tf.transpose()*(GN + GN.transpose())*Tf;
+    }
+
+
+    /// @return Block Diagonal matrix with Rvf for each vertex v in face f
     DenseMatrix BlockConnection(const Face &f) const {
         auto nf = degree(f);
         DenseMatrix RU_fO = DenseMatrix::Zero(nf * 2, nf * 2);
@@ -662,7 +685,7 @@ public:
         return RU_fO;
     }
 
-    //performs the tensor-kronecker product of M with Id2
+    /// @return the tensor-kronecker product of M with 2x2 identity matrix
     DenseMatrix KroneckerWithI2(const DenseMatrix& M) const{
         size_t h = M.rows(); size_t w = M.cols();
         DenseMatrix MK = DenseMatrix::Zero(h*2,w*2);
@@ -674,84 +697,124 @@ public:
         return MK;
     }
 
-    // Covariant Gradient Operator, returns the operator that acts on the
-    // concatenated vectors. When applied, gives the associated 2x2 matrix in the
-    // isomorphic vector form (a b c d)^t
-    // to be used in the dirichlet energy
-    // G∇_f
+    /// @return Covariant Gradient Operator, returns the operator that acts on the
+    /// concatenated vectors. When applied, gives the associated 2x2 matrix in the
+    /// isomorphic vector form (a b c d)^t
+    /// to be used in the dirichlet energy (vector laplacian)
+    /// G∇_f
     DenseMatrix EnergyCovG_f(const Face &f) const {
         return KroneckerWithI2(Tf(f).transpose()*gradient(f))*BlockConnection(f);
     }
 
-    // Projection Gradient Operator, returns the operator that acts on the
-    // concatenated vectors. When applied, gives the associated nfx2 matrix in the
-    // isomorphic vector form (a b c d ... )^t
-    // to be used in the dirichlet energy
-    // P∇_f
+    /// @return Projection Gradient Operator, returns the operator that acts on the
+    /// concatenated vectors. When applied, gives the associated nfx2 matrix in the
+    /// isomorphic vector form (a b c d ... )^t
+    /// to be used in the dirichlet energy (vector laplacian)
+    /// P∇_f
     DenseMatrix EnergyCovP_f(const Face &f) const {
         return KroneckerWithI2(P(f)*D(f))*BlockConnection(f);;
     }
 
-    // Connection Laplacian
-    // L∇ := (afG∇tG∇+λP∇tP∇)
+    /// @return to fit @cite degoes2020discrete paper's notations,
+    /// this function maps all the per vertex vectors (expressed in the (2*nf) vector form) to the nfx2 matrix with transported vectors (to face f) in each row
+    /// @note Unlike the rest of the per face operators, the
+    /// covariant operators need to be applied directly to the restriction of the vector field to the face,
+    DenseMatrix TransportAndFormatVectorField(const Face f,const Vector& uf){
+        DenseMatrix uf_nabla(myFaceDegree[f],2);
+        size_t cpt = 0;
+        for (auto v : mySurfaceMesh->incidentVertices(f)){
+            uf_nabla.block(cpt,0,1,2) = (Rvf(v,f)*uf.block(2*cpt,0,2,1)).transpose();
+            ++cpt;
+        }
+        return uf_nabla;
+    }
+
+    /// @return the covariant gradient of the given vector field uf (expressed in corresponding vertex tangent frames), wrt face f
+    /// @note Unlike the rest of the per face operators, the
+    /// covariant operators need to be applied directly to the restriction of the vector field to the face,
+    DenseMatrix CovariantGradient(const Face f,const Vector& uf){
+        return T_f(f).transpose()*gradient(f)*TransportAndFormatVectorField(uf);
+    }
+
+    /// @return the covariant projection of the given vector field uf ( restricted to face f and expressed in corresponding vertex tangent frames)
+    /// @note Unlike the rest of the per face operators, the
+    /// covariant operators need to be applied directly to the restriction of the vector field to the face
+    DenseMatrix CovariantProjection(const Face f,const Vector& uf){
+        return P(f)*D(f)*TransportAndFormatVectorField(uf);
+    }
+
+    /// L∇ := -(afG∇tG∇+λP∇tP∇)
+    /// @return Connection/Vector laplacian at face f
+    /// @note The sign convention for the divergence and the Laplacian
+    /// operator is opposite to the one of @cite degoes2020discrete .
+    /// This is to match the usual mathematical
+    /// convention that the Laplacian (and the Laplacian-Beltrami) has
+    /// negative eigenvalues (and is the sum of second derivatives in
+    /// the cartesian grid). It also follows the formal adjointness of
+    /// exterior derivative and opposite of divergence as relation \f$
+    /// \langle \mathrm{d} u, v \rangle = - \langle u, \mathrm{div} v
+    /// \rangle \f$. See also https://en.wikipedia.org/wiki/Laplace–Beltrami_operator
     DenseMatrix CovL(const Face &f, double lambda = 1.0) const {
         auto G = EnergyCovG_f(f);
         auto P = EnergyCovP_f(f);
         return -(faceArea(f) * G.transpose() * G + lambda * P.transpose() * P);
     }
+    /// @}
     // ----------------------- Global operators --------------------------------------
 
-  /// @name Global operators
-  /// @{
-  /// @return a 0-form initialized to zero
-  Form form0() const
-  {
-    return Form::Zero( nbVertices() );
-  }
-  /// @return the identity linear operator for 0-forms
-  SparseMatrix identity0() const
-  {
-    SparseMatrix Id0( nbVertices(), nbVertices() );
-    Id0.setIdentity();
-    return Id0;
-  }
+    /// @name Global operators
+    /// @{
 
-  /// Computes the global Laplace-Beltrami operator by assembling the
-  /// per face operators.
-  ///
-  /// @param lambda the regularization parameter for the local Laplace-Beltrami operators
-  /// @return a sparse nbVertices x nbVertices matrix
-  ///
-  /// @note The sign convention for the divergence is opposite to the
-  /// one of @cite degoes2020discrete. This is also true for the
-  /// Laplacian operator. This is to match the usual mathematical
-  /// convention that the Laplacian (and the Laplacian-Beltrami) has
-  /// negative eigenvalues (and is the sum of second derivatives in
-  /// the cartesian grid). It also follows the formal adjointness of
-  /// exterior derivative and opposite of divergence as relation \f$
-  /// \langle \mathrm{d} u, v \rangle = - \langle u, \mathrm{div} v
-  /// \rangle \f$. See also https://en.wikipedia.org/wiki/Laplace–Beltrami_operator
-  SparseMatrix globalLaplaceBeltrami(const double lambda=1.0) const
-  {
-    SparseMatrix lapGlobal(mySurfaceMesh->nbVertices(), mySurfaceMesh->nbVertices());
-    std::vector<Triplet> triplets;
-    for( auto f = 0; f < mySurfaceMesh->nbFaces(); ++f )
+
+    /// @return a 0-form initialized to zero
+    Form form0() const
     {
-      auto nf = myFaceDegree[f];
-      DenseMatrix Lap = this->LaplaceBeltrami(f,lambda);
-      const auto vertices = mySurfaceMesh->incidentVertices(f);
-      for(auto i=0; i < nf; ++i)
-        for(auto j=0; j < nf; ++j)
-        {
-          auto v = Lap(i,j);
-          if (v!= 0.0)
-            triplets.emplace_back( Triplet( vertices[ i ], vertices[ j ],
-                                            Lap( i, j ) ) );
-        }
+        return Form::Zero( nbVertices() );
     }
-    lapGlobal.setFromTriplets(triplets.begin(), triplets.end());
-    return lapGlobal;
-  }
+    /// @return the identity linear operator for 0-forms
+    SparseMatrix identity0() const
+    {
+        SparseMatrix Id0( nbVertices(), nbVertices() );
+        Id0.setIdentity();
+        return Id0;
+    }
+
+    /// Computes the global Laplace-Beltrami operator by assembling the
+    /// per face operators.
+    ///
+    /// @param lambda the regularization parameter for the local Laplace-Beltrami operators
+    /// @return a sparse nbVertices x nbVertices matrix
+    ///
+    /// @note The sign convention for the divergence is opposite to the
+    /// one of @cite degoes2020discrete. This is also true for the
+    /// Laplacian operator. This is to match the usual mathematical
+    /// convention that the Laplacian (and the Laplacian-Beltrami) has
+    /// negative eigenvalues (and is the sum of second derivatives in
+    /// the cartesian grid). It also follows the formal adjointness of
+    /// exterior derivative and opposite of divergence as relation \f$
+    /// \langle \mathrm{d} u, v \rangle = - \langle u, \mathrm{div} v
+    /// \rangle \f$. See also https://en.wikipedia.org/wiki/Laplace–Beltrami_operator
+    SparseMatrix globalLaplaceBeltrami(const double lambda=1.0) const
+    {
+        SparseMatrix lapGlobal(mySurfaceMesh->nbVertices(), mySurfaceMesh->nbVertices());
+        std::vector<Triplet> triplets;
+        for( auto f = 0; f < mySurfaceMesh->nbFaces(); ++f )
+        {
+            auto nf = myFaceDegree[f];
+            DenseMatrix Lap = this->LaplaceBeltrami(f,lambda);
+            const auto vertices = mySurfaceMesh->incidentVertices(f);
+            for(auto i=0; i < nf; ++i)
+                for(auto j=0; j < nf; ++j)
+                {
+                    auto v = Lap(i,j);
+                    if (v!= 0.0)
+                        triplets.emplace_back( Triplet( vertices[ i ], vertices[ j ],
+                                        Lap( i, j ) ) );
+                }
+        }
+        lapGlobal.setFromTriplets(triplets.begin(), triplets.end());
+        return lapGlobal;
+    }
 
     /// Compute and returns the global lumped mass matrix
     /// (diagonal matrix with Max's weights for each vertex).
@@ -774,18 +837,18 @@ public:
         return M;
     }
 
-  /// Compute and returns the inverse of the global lumped mass matrix
-  /// (diagonal matrix with Max's weights for each vertex).
-  ///
-  /// @return the inverse of the global lumped mass matrix.
-  SparseMatrix globalInverseLumpedMassMatrix() const
-  {
-    SparseMatrix iM0 = globalLumpedMassMatrix();
-    for ( int k = 0; k < iM0.outerSize(); ++k )
-      for ( typename SparseMatrix::InnerIterator it( iM0, k ); it; ++it )
-        it.valueRef() = 1.0 / it.value();
-    return iM0;
-  }
+    /// Compute and returns the inverse of the global lumped mass matrix
+    /// (diagonal matrix with Max's weights for each vertex).
+    ///
+    /// @return the inverse of the global lumped mass matrix.
+    SparseMatrix globalInverseLumpedMassMatrix() const
+    {
+        SparseMatrix iM0 = globalLumpedMassMatrix();
+        for ( int k = 0; k < iM0.outerSize(); ++k )
+            for ( typename SparseMatrix::InnerIterator it( iM0, k ); it; ++it )
+                it.valueRef() = 1.0 / it.value();
+        return iM0;
+    }
 
 
 
@@ -808,14 +871,14 @@ public:
             for(auto i=0u; i < nf; ++i)
                 for(auto j=0u; j < nf; ++j)
                 {
-                        for (short k1 = 0;k1<2;k1++){
-                            for (short k2 = 0;k2<2;k2++){
-                                auto v = Lap(2*i+k1,2*j+k2);
-                                if (v!= 0.0){
-                                    triplets.emplace_back(Triplet(2*vertices[i]+k1,2*vertices[j]+k2,v));
-                                }
+                    for (short k1 = 0;k1<2;k1++){
+                        for (short k2 = 0;k2<2;k2++){
+                            auto v = Lap(2*i+k1,2*j+k2);
+                            if (v!= 0.0){
+                                triplets.emplace_back(Triplet(2*vertices[i]+k1,2*vertices[j]+k2,v));
                             }
                         }
+                    }
                 }
         }
         lapGlobal.setFromTriplets(triplets.begin(),triplets.end());
@@ -844,11 +907,11 @@ public:
         M.setFromTriplets(triplets.begin(),triplets.end());
         return M;
     }
-  /// @}
+    /// @}
 
     // ----------------------- Cache mechanism --------------------------------------
-  /// @name Cache mechanism
-  /// @{
+    /// @name Cache mechanism
+    /// @{
 
     /// Generic method to compute all the per face DenseMatrices and store them in an
     /// indexed container.
@@ -916,8 +979,8 @@ public:
 
     // ----------------------- Common --------------------------------------
 public:
-  /// @name Common services
-  /// @{
+    /// @name Common services
+    /// @{
 
     /// Update the internal cache structures
     /// (e.g. degree of each face).
@@ -959,7 +1022,7 @@ public:
         return mySurfaceMesh;
     }
 
-   /**
+    /**
    * Writes/Displays the object on an output stream.
    * @param out the output stream where the object is written.
    */
@@ -981,6 +1044,8 @@ public:
     {
         return true;
     }
+
+    ///@}
 
     // ------------------------- Protected Datas ------------------------------
 protected:
@@ -1037,7 +1102,7 @@ protected:
     ///Embedding function (vertex)->R^3 for the vertex normal.
     std::function<Vector(Vertex)> myVertexNormalEmbedder;
 
-   // std::function<Vector(Face)> myFaceNormalEmbedder;
+    // std::function<Vector(Face)> myFaceNormalEmbedder;
 
     ///Cache containing the face degree
     std::vector<size_t> myFaceDegree;
