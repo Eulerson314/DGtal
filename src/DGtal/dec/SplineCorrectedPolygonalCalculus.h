@@ -159,7 +159,6 @@ public:
 
     // ----------------------- Inner Spline Classes --------------------------------------
 public:
-    /*
 struct Spline{
     static constexpr int DEGREE = 3;
     DenseMatrix coeffs;
@@ -173,7 +172,7 @@ struct Spline{
         midpointForm(3) = 0.25;
     }
 
-    Vector eval(double t) const {
+    Vector3 eval(double t) const {
         Vector T = Vector::Zero(4);
         double x = 1;
         for (int i = 0;i<4;i++){
@@ -183,41 +182,20 @@ struct Spline{
         return (coeffs*T).col(0);
     }
 
-    Vector operator()(double t) const{ return eval(t);}
+    Vector3 operator()(double t) const{ return eval(t);}
 
-    TRealPoint evalAsPoint(double t) const {
-        Vector X = eval(t);
-        TRealPoint Xp;
-        for (int i = 0;i<3;i++)
-            Xp(i) = X(i);
-        return Xp;
-    }
-    Vector evalTangent(double t) const {
+    Vector3 evalTangent(double t) const {
         Vector T = Vector::Zero(4);
         T(3) = 3*t*t;
         T(2) = 2*t;
         T(1) = 1;
         return (coeffs*T).col(0);
     }
-    TRealPoint evalTangentAsPoint(double t) const {
-        Vector X = evalTangent(t);
-        TRealPoint Xp;
-        for (int i = 0;i<3;i++)
-            Xp(i) = X(i);
-        return Xp;
-    }
-    Vector evalNormal(double t) const {
+    Vector3 evalNormal(double t) const {
         Vector T = Vector::Zero(4);
         T(3) = 6*t;
         T(2) = 2;
         return (coeffs*T).col(0);
-    }
-    TRealPoint evalNormalAsPoint(double t) const {
-        Vector X = evalNormal(t);
-        TRealPoint Xp;
-        for (int i = 0;i<3;i++)
-            Xp(i) = X(i);
-        return Xp;
     }
     Vector averagePoint() const {
         return coeffs*midpointForm;
@@ -227,15 +205,16 @@ struct Spline{
 
 struct SplineMaker {
 
-    Eigen::ColPivHouseholderQR<Eigen::Matrix4d> normal_solver;
     Eigen::ColPivHouseholderQR<Eigen::Matrix4d> tangent_solver;
     SplineMaker(){
+        /*
         Eigen::Matrix4d N;
         N << 1,0,0,0,
              1,1,1,1,
              0,0,2,0,
              0,0,2,6;
         normal_solver.compute(N);
+        */
         Eigen::Matrix4d T;
         T << 1,0,0,0,
              1,1,1,1,
@@ -243,6 +222,7 @@ struct SplineMaker {
              0,1,2,3;
         tangent_solver.compute(T);
     }
+    /*
     Spline makeNormalSpline(
             const Vector& x1,
             const Vector& n1,
@@ -258,7 +238,7 @@ struct SplineMaker {
         }
         S.coeffs = normal_solver.solve(B).transpose();
         return S;
-    }
+    }*/
     Spline makeTangentSpline(
             const Vector& x1,
             const Vector& t1,
@@ -278,11 +258,11 @@ struct SplineMaker {
 };
 
     SplineMaker splineMaker;
-*/
+    /*
     struct Spline{
         Matrix3 coeff;
         Spline() {}
-        /*
+
         Spline(const Vector& x1,const Vector& n1,const Vector& x2,const Vector& n2){
             DenseMatrix A = DenseMatrix::Zero(8,9);
             for (int i = 0;i<3;i++){
@@ -314,7 +294,6 @@ struct SplineMaker {
             for ( int i = 0;i<3;i++)
                 coeff.block(i,0,1,3) = sol.block(3*i,0,3,1).transpose();
         }
-        */
 
     static Matrix3 getProjector(const Vector3& a,const Vector3& b){
         Eigen::Matrix<double,3,2> T;
@@ -362,7 +341,7 @@ struct SplineMaker {
             return coeff*T;
         }
     };
-
+*/
 public:
     // ---------------------- Redefined Operators ---------------------------
 
@@ -390,7 +369,6 @@ public:
                 //S = splineMaker.makeNormalSpline(xi,ni,xj,nj);
             }
             else {
-                /*
                 Vector3 e = xj-xi;
                 Vector eti = projectOnVertexTangentPlane(e,i);//.normalized()*e.norm();
                 Vector etj = projectOnVertexTangentPlane(e,j);//.normalized()*e.norm();
@@ -398,10 +376,11 @@ public:
                                                  eti,
                                                   xj,
                                                  etj);
-                                                 */
+                /*
                 Vector3 ni = toVec3(this->myVertexNormalEmbedder(i));
                 Vector3 nj = toVec3(this->myVertexNormalEmbedder(j));
                 S = Spline(xi,ni,xj,nj);
+                */
             }
             return S;
     }
