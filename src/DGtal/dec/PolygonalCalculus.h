@@ -1181,7 +1181,7 @@ public:
     }
 
     // ------------------------- Internals ------------------------------------
-    private:
+protected:
     /// Underlying SurfaceMesh
     const MySurfaceMesh * mySurfaceMesh;
 
