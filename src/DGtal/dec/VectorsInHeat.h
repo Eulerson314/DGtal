@@ -43,6 +43,7 @@
 #include <iostream>
 #include "DGtal/base/Common.h"
 #include "DGtal/base/ConstAlias.h"
+#include "DGtal/math/linalg/DirichletConditions.h"
 //////////////////////////////////////////////////////////////////////////////
 
 namespace DGtal
@@ -69,6 +70,8 @@ public:
     typedef typename PolygonalCalculus::Solver Solver;
     typedef typename PolygonalCalculus::Vector Vector;
     typedef typename PolygonalCalculus::Vertex Vertex;
+    typedef DirichletConditions< LinAlgBackend > Conditions;
+    typedef typename Conditions::IntegerVector IntegerVector;
 
     /**
      * Default constructor.
@@ -118,26 +121,28 @@ public:
     // ----------------------- Interface --------------------------------------
 
     /// Initialize the solvers with @a dt as timestep for the
-    /// heat diffusion
+    /// heat diffusion and @a lambda parameter for the polygonal calculus,
+    /// which guarantee definiteness for positive @a lambda.
     /// @param dt timestep
-    void init(double dt)
+    /// @param lambda 
+    ///
+    /// @param boundary_with_mixed_solution when 'true' and when the
+    /// surface has boundaries, mix two solutions of the heat
+    /// diffusion operation (Neumann and Dirichlet null conditions on
+    /// boundary).
+    void init( double dt, double lambda = 1.0,
+               bool boundary_with_mixed_solution = false )
     {
         myIsInit=true;
 
-        //As the LB is PSD, the identity matrix shouldn't be necessary. However, some solvers
-        //may have issues with positive semi-definite matrix.
-        SparseMatrix I(myCalculus->nbVertices(),myCalculus->nbVertices());
-        I.setIdentity();
-        SparseMatrix laplacian = myCalculus->globalLaplaceBeltrami()  + I*1e-6;
+        SparseMatrix laplacian = myCalculus->globalLaplaceBeltrami( lambda );
 
-        SparseMatrix I2(2*myCalculus->nbVertices(),2*myCalculus->nbVertices());
-        I2.setIdentity();
-        SparseMatrix connectionLaplacian = myCalculus->globalConnectionLaplace() + I2*1e-6;
+        SparseMatrix connectionLaplacian = myCalculus->globalConnectionLaplace( lambda );
 
-        SparseMatrix mass      = myCalculus->globalLumpedMassMatrix();
-        SparseMatrix mass2      = myCalculus->doubledGlobalLumpedMassMatrix();
-        SparseMatrix scalarHeatOpe   =  mass - dt*laplacian;
-        SparseMatrix vectorHeatOpe   =  mass2 - dt*connectionLaplacian;
+        SparseMatrix mass = myCalculus->globalLumpedMassMatrix();
+        SparseMatrix mass2= myCalculus->doubledGlobalLumpedMassMatrix();
+        myScalarHeatOpe   =  mass - dt*laplacian;
+        myVectorHeatOpe   =  mass2 - dt*connectionLaplacian;
 
         //Prefactorizing
         myScalarHeatSolver.compute(scalarHeatOpe);
@@ -147,6 +152,25 @@ public:
         myVectorSource     	= Vector::Zero(2*myCalculus->nbVertices());
         myScalarSource		= Vector::Zero(myCalculus->nbVertices());
         myDiracSource		= Vector::Zero(myCalculus->nbVertices());
+
+        // Manage boundaries
+        myManageBoundary = false;
+        if ( ! boundary_with_mixed_solution ) return;
+        myBoundary = IntegerVector::Zero(myCalculus->nbVertices());
+        const auto surfmesh = myCalculus->getSurfaceMeshPtr();
+        const auto edges    = surfmesh->computeManifoldBoundaryEdges();
+        for ( auto e : edges )
+          {
+            const auto vtcs = surfmesh->edgeVertices( e );
+            myBoundary[ vtcs.first  ] = 1;
+            myBoundary[ vtcs.second ] = 1;
+          }
+        myManageBoundary = ! edges.empty();
+        if ( ! myManageBoundary ) return;
+        // Prepare solver for a problem with Dirichlet conditions.
+        SparseMatrix heatOpe_d = Conditions::dirichletOperator( myScalarHeatOpe, myBoundary );
+        // Prefactoring
+        myHeatDirichletSolver.compute( heatOpe_d );
     }
 
     /** Adds a source vector (3D extrinsic) at a vertex @e aV
@@ -198,6 +222,19 @@ public:
         Vector diracHeatDiffusion = myScalarHeatSolver.solve(myDiracSource);
         auto surfmesh = myCalculus->getSurfaceMeshPtr();
 
+
+        // Take care of boundaries
+        if ( myManageBoundary )
+        {
+          Vector bValues  = Vector::Zero( myCalculus->nbVertices() );
+          Vector bNormSources = Conditions::dirichletVector( myScalarHeatOpe, myScalarSource,
+                                                         myBoundary, bValues );
+          Vector bSol     = myHeatDirichletSolver.solve( bNormSources );
+          Vector heatDiffusionDirichlet
+                          = Conditions::dirichletSolution( bSol, myBoundary, bValues );
+          scalarHeatDiffusion = 0.5 * ( scalarHeatDiffusion + heatDiffusionDirichlet );
+        }
+
         std::vector<Vector> result(surfmesh->nbVertices());
 
         for (auto v = 0;v<surfmesh->nbVertices();v++){
@@ -225,20 +262,31 @@ private:
     ///The underlying PolygonalCalculus instance
     const PolygonalCalculus *myCalculus;
 
-    ///Poisson solver
-    Solver myPoissonSolver;
+    ///The operators for heat diffusion
+    SparseMatrix myScalarHeatOpe;
+    SparseMatrix myVectorHeatOpe;
 
-    ///Heat solver
+    ///Heat solvers
     Solver myScalarHeatSolver;
     Solver myVectorHeatSolver;
 
-    ///Source vector
+    ///Source vectors
     Vector myScalarSource;
     Vector myDiracSource;
     Vector myVectorSource;
 
+    /// When 'true', manage boundaries with a mixed solution of
+    /// Neumann and Dirichlet conditions.
+    bool myManageBoundary;
+
+    /// The boundary characteristic vector
+    IntegerVector myBoundary;
+
     ///Validitate flag
     bool myIsInit;
+
+    ///Heat solver with Dirichlet boundary conditions.
+    Solver myHeatDirichletSolver;
 
 }; // end of class VectorsInHeat
 } // namespace DGtal
