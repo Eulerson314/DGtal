@@ -790,7 +790,7 @@ public:
     /// the vector field to the face,
     DenseMatrix CovariantGradient(const Face f, const Vector & uf)
     {
-      return T_f(f).transpose() * gradient(f) *
+      return Tf(f).transpose() * gradient(f) *
              TransportAndFormatVectorField(uf);
     }
 
