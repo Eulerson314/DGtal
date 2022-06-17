@@ -106,6 +106,10 @@ namespace DGtal
     /// Type of a sparse matrix solver
     typedef LinAlg::SolverSimplicialLDLT Solver;
 
+    typedef std::function<Real3dPoint(Face, Vertex)> PositionEmbedder;
+    typedef std::function<Vector(Face)> FaceNormalEmbedder;
+    typedef std::function<Vector(Vertex)> VertexNormalEmbedder;
+
     /// @name Standard services
     /// @{
 
@@ -119,72 +123,13 @@ namespace DGtal
       : mySurfaceMesh(&surf)
       , myGlobalCacheEnabled(globalInternalCacheEnabled)
     {
-      myEmbedder = [ & ](Face f, Vertex v)
+      myEmbedder = [ & ](Face , Vertex v)
       { return mySurfaceMesh->position(v); };
       myVertexNormalEmbedder = [ & ](Vertex v)
       { return computeVertexNormal(v); };
+      myFaceNormalEmbedder = [ & ] (Face f)
+      { return vectorArea(f).normalized(); };
 
-      init();
-    };
-
-    /// Create a Polygonal DEC structure from a surface mesh (@a surf)
-    /// and an embedder for the vertex position: function with two parameters, a
-    /// face and a vertex which outputs the embedding in R^3 of the vertex
-    /// w.r.t. to the face.
-    /// @param surf an instance of SurfaceMesh
-    /// @param embedder an embedder
-    /// @param globalInternalCacheEnabled
-    PolygonalCalculus(
-    const ConstAlias<MySurfaceMesh> surf,
-    const std::function<Real3dPoint(Face, Vertex)> & embedder,
-    bool globalInternalCacheEnabled = false)
-      : mySurfaceMesh(&surf)
-      , myEmbedder(embedder)
-      , myGlobalCacheEnabled(globalInternalCacheEnabled)
-    {
-      myVertexNormalEmbedder = [ & ](Vertex v)
-      { return computeVertexNormal(v); };
-      init();
-    };
-
-    /// Create a Polygonal DEC structure from a surface mesh (@a surf)
-    /// and an embedder for the vertex normal: function with a vertex as
-    /// parameter which outputs the embedding in R^3 of the vertex normal.
-    /// @param surf an instance of SurfaceMesh
-    /// @param embedder an embedder
-    /// @param globalInternalCacheEnabled
-    PolygonalCalculus(const ConstAlias<MySurfaceMesh> surf,
-                       const std::function<Vector(Vertex)> & embedder,
-                       bool globalInternalCacheEnabled = false)
-      : mySurfaceMesh(&surf)
-      , myVertexNormalEmbedder(embedder)
-      , myGlobalCacheEnabled(globalInternalCacheEnabled)
-    {
-      myEmbedder = [ & ](Face f, Vertex v)
-      { return mySurfaceMesh->position(v); };
-      init();
-    };
-
-    /// Create a Polygonal DEC structure from a surface mesh (@a surf)
-    /// and an embedder for the vertex position: function with two parameters, a
-    /// face and a vertex which outputs the embedding in R^3 of the vertex
-    /// w.r.t. to the face. and an embedder for the vertex normal: function with
-    /// a vertex as parameter which outputs the embedding in R^3 of the vertex
-    /// normal.
-    /// @param surf an instance of SurfaceMesh
-    /// @param pos_embedder an embedder for the position
-    /// @param normal_embedder an embedder for the position
-    /// @param globalInternalCacheEnabled
-    PolygonalCalculus(
-    const ConstAlias<MySurfaceMesh> surf,
-    const std::function<Real3dPoint(Face, Vertex)> & pos_embedder,
-    const std::function<Vector(Vertex)> & normal_embedder,
-    bool globalInternalCacheEnabled = false)
-      : mySurfaceMesh(&surf)
-      , myEmbedder(pos_embedder)
-      , myVertexNormalEmbedder(normal_embedder)
-      , myGlobalCacheEnabled(globalInternalCacheEnabled)
-    {
       init();
     };
 
@@ -230,13 +175,30 @@ namespace DGtal
     /// @name Embedding services
     /// @{
 
-    /// Update the embedding function.
+    /// Update the position embedding function.
     /// @param externalFunctor a new embedding functor (Face,Vertex)->RealPoint.
-    void setEmbedder(
-    const std::function<Real3dPoint(Face, Vertex)> & externalFunctor)
+    void setPositionEmbedder(
+    const PositionEmbedder& externalFunctor)
     {
       myEmbedder = externalFunctor;
     }
+
+    /// Update the face normal embedding function.
+    /// @param externalFunctor a new embedding functor (Face)->Vector.
+    void setFaceNormalEmbedder(
+    const FaceNormalEmbedder & externalFunctor)
+    {
+      myFaceNormalEmbedder = externalFunctor;
+    }
+
+    /// Update the vertex normal embedding function.
+    /// @param externalFunctor a new embedding functor (Vertex)->Vector.
+    void setVertexNormalEmbedder(
+    const VertexNormalEmbedder & externalFunctor)
+    {
+      myVertexNormalEmbedder = externalFunctor;
+    }
+
     /// @}
 
     // ----------------------- Per face operators ------------------------------
@@ -359,9 +321,7 @@ namespace DGtal
     /// @return a vector (Eigen vector)
     Vector faceNormal(const Face f) const
     {
-      Vector v = vectorArea(f);
-      v.normalize();
-      return v;
+      return myFaceNormalEmbedder(f);
     }
 
     /// Corrected normal vector of a face.
@@ -1187,10 +1147,12 @@ protected:
 
     /// Embedding function (face,vertex)->R^3 for the vertex position wrt. the
     /// face.
-    std::function<Real3dPoint(Face, Vertex)> myEmbedder;
+    PositionEmbedder myEmbedder;
 
     /// Embedding function (vertex)->R^3 for the vertex normal.
-    std::function<Vector(Vertex)> myVertexNormalEmbedder;
+    VertexNormalEmbedder myVertexNormalEmbedder;
+
+    FaceNormalEmbedder myFaceNormalEmbedder;
 
     /// Cache containing the face degree
     std::vector<size_t> myFaceDegree;
