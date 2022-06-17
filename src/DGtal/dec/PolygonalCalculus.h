@@ -706,9 +706,9 @@ namespace DGtal
         N.block(cpt, 0, 3, 1) = n_v(v).transpose();
         cpt++;
       }
-      DenseMatrix GN = gradient(f) * N, Tf = Tf(f);
+      DenseMatrix GN = gradient(f) * N, T = Tf(f);
 
-      return 0.5 * Tf.transpose() * (GN + GN.transpose()) * Tf;
+      return 0.5 * T.transpose() * (GN + GN.transpose()) * T;
     }
 
 private: //Covariant operators routines
