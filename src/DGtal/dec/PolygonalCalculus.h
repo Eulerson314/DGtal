@@ -657,7 +657,7 @@ namespace DGtal
     }
 
     ///@return Shape Operator at face f
-    DenseMatrix shape(const Face f)
+    DenseMatrix shape(const Face f) const
     {
       DenseMatrix N(myFaceDegree[ f ], 3);
       uint cpt = 0;
