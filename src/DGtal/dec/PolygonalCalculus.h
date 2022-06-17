@@ -703,7 +703,7 @@ namespace DGtal
       uint cpt = 0;
       for (Vertex v : mySurfaceMesh->incidentVertices(f))
       {
-        N.block(cpt, 0, 3, 1) = n_v(v).transpose();
+        N.block(cpt, 0, 1, 3) = n_v(v).transpose();
         cpt++;
       }
       DenseMatrix GN = gradient(f) * N, T = Tf(f);
