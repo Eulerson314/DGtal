@@ -706,7 +706,7 @@ namespace DGtal
         N.block(cpt, 0, 3, 1) = n_v(v).transpose();
         cpt++;
       }
-      DenseMatrix GN = gradient(f) * N, Tf = T_f(f);
+      DenseMatrix GN = gradient(f) * N, Tf = Tf(f);
 
       return 0.5 * Tf.transpose() * (GN + GN.transpose()) * Tf;
     }
