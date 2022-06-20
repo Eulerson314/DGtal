@@ -821,7 +821,7 @@ public:
 
     DenseMatrix AdjointGradient(Vertex v) const
     {
-        auto faces = mySurfaceMesh->incidentFaces[v];
+        auto faces = mySurfaceMesh->incidentFaces(v);
         auto nf = faces.size();
 
         DenseMatrix G = DenseMatrix::Zero(3,nf);
@@ -836,7 +836,7 @@ public:
 
     DenseMatrix AdjointCovariantGradient(Vertex v,Vector uf) const
     {
-        auto faces = mySurfaceMesh->incidentFaces[v];
+        auto faces = mySurfaceMesh->incidentFaces(v);
         auto nf = faces.size();
 
         DenseMatrix G = DenseMatrix::Zero(2,2);
