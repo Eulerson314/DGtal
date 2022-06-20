@@ -570,7 +570,8 @@ namespace DGtal
         auto P = X(f);
         auto nf = myFaceDegree[f];
         Eigen::Vector3d g = (P.row((id > 0) ? id-1 : nf-1) - P.row((id  < nf-1) ? id+1 : 0)).transpose().head(3);
-        return faceNormal(f).head(3).cross(g)/(2*faceArea(f));
+        Eigen::Vector3d n = faceNormal(f).head(3);
+        return n.cross(g)/(2*faceArea(f));
     }
 
     /// \param v the vertex to compute the normal from
