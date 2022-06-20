@@ -833,6 +833,23 @@ public:
         }
         return G/vertexArea(v);
     }
+
+    DenseMatrix AdjointCovariantGradient(Vertex v,Vector uf) const
+    {
+        auto faces = mySurfaceMesh->incidentFaces[v];
+        auto nf = faces.size();
+
+        DenseMatrix G = DenseMatrix::Zero(2,2);
+
+        size_t cpt = 0;
+        for (auto f : faces){
+            G += faceArea(f)*
+                    (Rvf(v,f).transpose()*Tf(f).transpose()*gvf(v,f))*
+                    (Rvf(v,f).transpose()*uf.block(2*cpt,0,2,1));
+            cpt++;
+        }
+        return G/vertexArea(v);
+    }
     // ----------------------- Global operators---------------------------------
 
     /// @name Global operators
