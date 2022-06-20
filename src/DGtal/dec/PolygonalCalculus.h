@@ -981,6 +981,24 @@ public:
       M.setFromTriplets(triplets.begin(), triplets.end());
       return M;
     }
+
+    SparseMatrix inverseDoubledGlobalLumpedMassMatrix() const
+    {
+      auto nv = mySurfaceMesh->nbVertices();
+      SparseMatrix M(2 * nv, 2 * nv);
+      std::vector<Triplet> triplets;
+      for (auto v = 0; v < mySurfaceMesh->nbVertices(); ++v)
+      {
+        auto faces = mySurfaceMesh->incidentFaces(v);
+        auto varea = 0.0;
+        for (auto f : faces)
+          varea += myFaceDegree[ f ]/faceArea(f);
+        triplets.emplace_back(Triplet(2 * v, 2 * v, varea));
+        triplets.emplace_back(Triplet(2 * v + 1, 2 * v + 1, varea));
+      }
+      M.setFromTriplets(triplets.begin(), triplets.end());
+      return M;
+    }
     /// @}
 
     // ----------------------- Cache mechanism ---------------------------------
