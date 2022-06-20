@@ -159,6 +159,7 @@ public:
 
     // ----------------------- Inner Spline Classes --------------------------------------
 public:
+
 struct Spline{
     static constexpr int DEGREE = 3;
     DenseMatrix coeffs;
