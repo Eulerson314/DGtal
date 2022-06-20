@@ -209,7 +209,7 @@ namespace DGtal
     /// Return the vertex position matrix degree x 3 of the face.
     /// @param f a face
     /// @return the n_f x 3 position matrix
-    DenseMatrix X(const Face f) const
+    virtual DenseMatrix X(const Face f) const
     {
       if (checkCache(X_, f))
         return myGlobalCache[ X_ ][ f ];
