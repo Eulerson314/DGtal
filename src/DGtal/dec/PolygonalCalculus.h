@@ -552,6 +552,26 @@ namespace DGtal
       return Eigen::Vector3d(x(0), x(1), x(2));
     }
 
+    size_t idInFace(Vertex v,Face f){
+        size_t id_in_face = 0;
+        auto V = mySurfaceMesh->incidentVertices(f);
+        for (auto n : V){
+            if (n == v)
+                return id_in_face;
+            id_in_face++;
+        }
+        assert(0);
+    }
+
+    Vector gvf(Vertex v,Face f)
+    {
+        size_t id = idInFace(v,f);
+        auto P = X(f);
+        auto nf = myFaceDegree[f];
+        Eigen::Vector3d g = (P.row((id > 0) ? id-1 : nf-1) - P.row((id  < nf-1) ? id+1 : 0)).transpose().head(3);
+        return faceNormal(f).head(3).cross(g)/(2*faceArea(f));
+    }
+
     /// \param v the vertex to compute the normal from
     /// \return 3D normal vector at vertex v
     ///
@@ -789,6 +809,30 @@ public:
       return L;
     }
     /// @}
+
+    // ----------------------- Adjoint Operators--------------------------------
+    double vertexArea(Vertex v) const
+    {
+        double va = 0.;
+        for (auto f : mySurfaceMesh->incidentFaces[v])
+            va += faceArea(f)/myFaceDegree[f];
+        return va;
+    }
+
+    DenseMatrix AdjointGradient(Vertex v) const
+    {
+        auto faces = mySurfaceMesh->incidentFaces[v];
+        auto nf = faces.size();
+
+        DenseMatrix G = DenseMatrix::Zero(3,nf);
+
+        size_t cpt = 0;
+        for (auto f : faces){
+            G.col(cpt) += faceArea(f)*Qvf(v,f).transpose()*gvf(v,f);
+            cpt++;
+        }
+        return G/vertexArea(v);
+    }
     // ----------------------- Global operators---------------------------------
 
     /// @name Global operators
