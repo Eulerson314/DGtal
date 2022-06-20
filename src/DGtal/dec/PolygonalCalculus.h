@@ -552,7 +552,8 @@ namespace DGtal
       return Eigen::Vector3d(x(0), x(1), x(2));
     }
 
-    size_t idInFace(Vertex v,Face f){
+    size_t idInFace(Vertex v,Face f) const
+    {
         size_t id_in_face = 0;
         auto V = mySurfaceMesh->incidentVertices(f);
         for (auto n : V){
@@ -563,7 +564,7 @@ namespace DGtal
         assert(0);
     }
 
-    Vector gvf(Vertex v,Face f)
+    Vector gvf(Vertex v,Face f) const
     {
         size_t id = idInFace(v,f);
         auto P = X(f);
@@ -814,7 +815,7 @@ public:
     double vertexArea(Vertex v) const
     {
         double va = 0.;
-        for (auto f : mySurfaceMesh->incidentFaces[v])
+        for (auto f : mySurfaceMesh->incidentFaces(v))
             va += faceArea(f)/myFaceDegree[f];
         return va;
     }
