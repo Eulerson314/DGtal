@@ -372,7 +372,7 @@ namespace DGtal
     /// Flat operator for the face.
     /// @param f the face
     /// @return a degree x 3 matrix
-    DenseMatrix flat(const Face f) const
+    virtual DenseMatrix flat(const Face f) const
     {
       if (checkCache(FLAT_, f))
         return myGlobalCache[ FLAT_ ][ f ];
@@ -414,7 +414,7 @@ namespace DGtal
     /// Sharp operator for the face.
     /// @param f the face
     /// @return a 3 x degree matrix
-    DenseMatrix sharp(const Face f) const
+    virtual DenseMatrix sharp(const Face f) const
     {
       if (checkCache(SHARP_, f))
         return myGlobalCache[ SHARP_ ][ f ];
@@ -431,7 +431,7 @@ namespace DGtal
     /// Projection operator for the face.
     /// @param f the face
     /// @return a degree x degree matrix
-    DenseMatrix P(const Face f) const
+    virtual DenseMatrix P(const Face f) const
     {
       if (checkCache(P_, f))
         return myGlobalCache[ P_ ][ f ];
