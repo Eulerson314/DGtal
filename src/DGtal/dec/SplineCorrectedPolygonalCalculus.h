@@ -108,8 +108,9 @@ public:
               const ConstAlias<MySurfaceMesh> surf,
               const std::function<Vector(Vertex)> &normal_embedder,
               bool globalInternalCacheEnabled = false):
-        PolygonalCalculus<TRealPoint,TRealVector>(surf,normal_embedder,globalInternalCacheEnabled)
+        PolygonalCalculus<TRealPoint,TRealVector>(surf,globalInternalCacheEnabled)
     {
+        this->setVertexNormalEmbedder(normal_embedder);
     };
 
     SplineCorrectedPolygonalCalculus(
@@ -117,8 +118,10 @@ public:
               const std::function<Real3dPoint(Face,Vertex)> &pos_embedder,
               const std::function<Vector(Vertex)> &normal_embedder,
               bool globalInternalCacheEnabled = false):
-        PolygonalCalculus<TRealPoint,TRealVector>(surf,pos_embedder,normal_embedder,globalInternalCacheEnabled)
+        PolygonalCalculus<TRealPoint,TRealVector>(surf,globalInternalCacheEnabled)
     {
+        this->setPositionEmbedder(pos_embedder);
+        this->setVertexNormalEmbedder(normal_embedder);
     };
 
     /**
