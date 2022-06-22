@@ -603,8 +603,8 @@ namespace DGtal
       assert(std::abs(nv.norm() - 1.0) < 0.001);
       const auto & N            = getSurfaceMeshPtr()->neighborVertices(v);
       auto neighbor             = *N.begin();
-      Real3dPoint tangentVector = myEmbedder(v) -
-                                  myEmbedder(neighbor);
+      Real3dPoint tangentVector = getSurfaceMeshPtr()->position(v) -
+                                  getSurfaceMeshPtr()->position(neighbor);
       Eigen::Vector3d w  = toVec3(tangentVector);
       Eigen::Vector3d uu = proj(w, nv).normalized();
       Eigen::Vector3d vv = nv.cross(uu);
@@ -625,7 +625,7 @@ namespace DGtal
       auto v1        = *(N.begin());
       auto v2        = *(N.begin() + 1);
       Real3dPoint tangentVector =
-      myEmbedder(v2) - myEmbedder(v1);
+      getSurfaceMeshPtr()->position(v2) - getSurfaceMeshPtr()->position(v1);
       Eigen::Vector3d w  = toVec3(tangentVector);
       Eigen::Vector3d uu = proj(w, nf).normalized();
       Eigen::Vector3d vv = nf.cross(uu);
