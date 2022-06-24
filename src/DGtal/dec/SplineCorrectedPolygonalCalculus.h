@@ -416,7 +416,7 @@ public:
                         - xj.cross(N1)
                         );
         }
-        return af;
+        return af*0.5;
     }
 
     DenseMatrix coGradient(const Face f) const override
